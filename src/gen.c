@@ -177,7 +177,7 @@ static int getrule(Node p, int nt) {
 	assert(p);
 	rulenum = (*IR->x._rule)(p->x.state, nt);
 	if (!rulenum) {
-		fprint(stderr, "(%x->op=%s at %w is corrupt.)\n", p, opname(p->op), &src);
+		fprint(stderr, "(%x->op=%s at %w is corrupt (%d).)\n", p, opname(p->op), &src, nt);
 		assert(0);
 	}
 	return rulenum;
@@ -332,6 +332,7 @@ unsigned emitasm(Node p, int nt) {
 	int rulenum;
 	short *nts;
 	char *fmt;
+    char firstchar;
 	Node kids[10];
 
 	p = reuse(p, nt);
@@ -339,18 +340,28 @@ unsigned emitasm(Node p, int nt) {
 	nts = IR->x._nts[rulenum];
 	fmt = IR->x._templates[rulenum];
 	assert(fmt);
+    firstchar = *fmt;
+
 	if (IR->x._isinstruction[rulenum] && p->x.emitted)
 		print("%s", p->syms[RX]->x.name);
-	else if (*fmt == '#')
+	else if (firstchar == '#')
 		(*IR->x.emit2)(p);
 	else {
-		if (*fmt == '?') {
+        if (firstchar == '$') {
+            fmt++;
+            (*IR->x.emit2)(p);
+        }
+        if (firstchar == '^') {
+            fmt++;
+        }
+		else if (firstchar == '?') {
 			fmt++;
 			assert(p->kids[0]);
-			if (p->syms[RX] == p->x.kids[0]->syms[RX])
+			if (p->x.kids[0] && p->syms[RX] == p->x.kids[0]->syms[RX])
 				while (*fmt++ != '\n')
 					;
 		}
+
 		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++)
 			if (*fmt != '%')
 				(void)putchar(*fmt);
@@ -362,6 +373,10 @@ unsigned emitasm(Node p, int nt) {
 				fputs(p->syms[*fmt - 'a']->x.name, stdout);
 			else
 				(void)putchar(*fmt);
+
+        if (firstchar == '^' ) {
+            (*IR->x.emit2)(p);
+        }
 	}
 	return 0;
 }
@@ -465,7 +480,7 @@ void rtarget(Node p, int n, Symbol r) {
 		q->x.kids[0] = q->kids[0];
 	}
 	setreg(q, r);
-	debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
+	//debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
 }
 static void rewrite(Node p) {
 	assert(p->x.inst == 0);

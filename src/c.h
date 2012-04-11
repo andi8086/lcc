@@ -10,6 +10,7 @@
 #define NEW0(p,a) memset(NEW((p),(a)), 0, sizeof *(p))
 #define isaddrop(op) (specific(op)==ADDRG+P || specific(op)==ADDRL+P \
 	|| specific(op)==ADDRF+P)
+#define isargop(op) (specific(op)==ARG+F || specific(op)==ARG+I || specific(op)==ARG+U || specific(op)==ARG+P || specific(op)==ARG+B)
 
 #define	MAXLINE  512
 #define	BUFSIZE 4096
