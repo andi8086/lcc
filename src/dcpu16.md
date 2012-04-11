@@ -635,7 +635,7 @@ Interface dcpu16IR = {
         0,        /* left_to_right */
         0,        /* wants_dag */
         1,        /* unsigned_char */
-//        16,       /* byte width */
+        16,       /* width */
         address,
         blockbeg,
         blockend,

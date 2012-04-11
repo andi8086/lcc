@@ -47,6 +47,7 @@ Interface nullIR = {
 	1,		/* left_to_right */
 	0,		/* wants_dag */
 	0,		/* unsigned_char */
+    8,       /* width */
 	I(address),
 	I(blockbeg),
 	I(blockend),

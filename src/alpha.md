@@ -1140,13 +1140,14 @@ Interface alphaIR = {
         8, 8, 0,  /* T * */
         0, 1, 0,  /* struct */
 
-        1,      /* little_endian */
+        1,  /* little_endian */
         0,  /* mulops_calls */
         0,  /* wants_callb */
         1,  /* wants_argb */
         1,  /* left_to_right */
         0,  /* wants_dag */
         0,  /* unsigned_char */
+        8,  /* width */
         address,
         blockbeg,
         blockend,
