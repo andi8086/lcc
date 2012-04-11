@@ -123,7 +123,7 @@ static int initfields(Field p, Field q) {
 
 	do {
 		i = initvalue(inttype)->u.v.i;
-		if (fieldsize(p) < 8*p->type->size) {
+		if (fieldsize(p) < IR->byte_width*p->type->size) {
 			if (p->type == inttype &&
 			   (i < -(int)(fieldmask(p)>>1)-1 || i > (int)(fieldmask(p)>>1))
 			||  p->type == unsignedtype && (i&~fieldmask(p)) !=  0)
