@@ -172,6 +172,7 @@ stmt:   ASGNP1(VREGP,reg)   "# write register\n"
 
 stmt:   reg ""
 
+con:    CNSTF1  "#" 1
 con:    CNSTI1  "%a" 1
 con:    CNSTU1  "%a" 1
 con:    CNSTP1  "%a" 1
@@ -209,11 +210,11 @@ reg:    BCOMU1(bval)                "SET %c, 0xffff\nXOR %c, %0\n" 3
 stmt:   ASGNI1(mem,BCOMI1(bval))    "SET %c, 0xffff\nXOR %c, %0\n" 3
 stmt:   ASGNU1(mem,BCOMU1(bval))    "SET %c, 0xffff\nXOR %c, %0\n" 3
 
-reg:    CVFI1(bval)             "SET %c, %0\n" 1
-stmt:   ASGNI1(mem,CVFI1(bval)) "SET %c, %0\n" 1
+reg:    CVFI1(bval)             "SET %c, %0\nSHR %c, 8\n" 4
+stmt:   ASGNI1(mem,CVFI1(bval)) "SET %c, %0\nSHR %c, 8\n" 4
 
-reg:    CVIF1(bval)                "SET %c, %0\n" 1
-stmt:   ASGNF1(mem,CVIF1(bval))    "SET %c, %0\n" 1 
+reg:    CVIF1(bval)                "SET %c, %0\nSHL %c, 8\n" 4
+stmt:   ASGNF1(mem,CVIF1(bval))    "SET %c, %0\nSHL %c, 8\n" 4
 reg:    CVIU1(bval)                "SET %c, %0\n" 1
 stmt:   ASGNU1(mem,CVIF1(bval))    "SET %c, %0\n" 1
 
@@ -271,8 +272,8 @@ stmt:   ASGNI1(mem,MODI1(bval,bval))    "SET %c, %0\nMOD %c, %1\n" 4
 reg:    MODU1(bval,bval)                "SET %c, %0\nMOD %c, %1\n" 4
 stmt:   ASGNU1(mem,MODU1(bval,bval))    "SET %c, %0\nMOD %c, %1\n" 4
 
-reg:    MULF1(bval,bval)                "SET %c, %0\nMUL %c, %1\n" 3 
-stmt:   ASGNI1(mem,MULF1(bval,bval))    "SET %c, %0\nMUL %c, %1\n" 3 
+reg:    MULF1(bval,bval)                "SET %c, %0\nMUL %c, %1\nSET X, O\nSHR %c, 8\nSHL X, 8\nADD %c, X\n" 12
+stmt:   ASGNF1(mem,MULF1(bval,bval))    "SET %c, %0\nMUL %c, %1\nSET X, O\nSHR %c, 8\nSHL X, 8\nADD %c, X\n" 12
 reg:    MULI1(bval,bval)                "SET %c, %0\nMUL %c, %1\n" 3
 stmt:   ASGNI1(mem,MULI1(bval,bval))    "SET %c, %0\nMUL %c, %1\n" 3
 reg:    MULU1(bval,bval)                "SET %c, %0\nMUL %c, %1\n" 3
@@ -411,6 +412,16 @@ static void target(Node p) {
 }
 
 static void clobber(Node p) {
+    int opsz;
+    assert(p);
+        
+    opsz = opsize(p->op);
+    switch (specific(p->op)) {
+        case MUL+F:
+            if (opsz == 1)
+                spill(1<<RGX, IREG, p);
+            break;
+    }
 }
 
 int memop(Node p) {
@@ -422,10 +433,15 @@ int sametree(Node p, Node q) {
 static void emit2(Node p) {
     int localoffset;
     int argoffset;
+    long double fltval;
 
     int op = specific(p->op); 
     if (opsize(p->op) == 1) {
         switch(op) {
+            case CNST+F:
+                fltval = p->syms[0]->u.c.v.d;
+                print("%d", (short)(fltval*256));
+                break;
             case ARG+F:
             case ARG+I:
             case ARG+U:
@@ -560,46 +576,12 @@ static void address(Symbol q, Symbol p, long n) {
 }
 
 static void defconst(int suffix, int size, Value v) {
-        print("\tDWM 0x%x\n",v.i & 0xffff);
 }
+
 static void defaddress(Symbol p) {
-        print("\tDWM\t%s\n", p->x.name);
 }
 
 static void defstring(int n, char *str) {
-    char *s=str;
-    int first = 1;
-    int quote = 0;
-    print("\tDFB\t");
-    while (s < str+n) {
-        if ((*s >= ' ')&&(*s != '"')) {
-           if (quote) {
-              print("%c",*s++);
-           } else {
-               if (!first) {
-                   print(",");
-               }
-
-          first = 0;
-              print("\"%c",*s++);
-          quote = 1;
-           }
-         } else {
-            if (quote) {
-             print("\",%d",*s++);
-                 quote = 0;
-            } else {
-               if (!first) {
-               first = 0;
-                   print(",");
-               }
-             print("%d",*s++);
-         first = 0;
-         }
-           
-        }
-    }
-    printf("\n");
 }
 
 static void export(Symbol p) {
@@ -639,11 +621,11 @@ Interface dcpu16IR = {
         1, 1, 0,  /* char */
         1, 1, 0,  /* short */
         1, 1, 0,  /* int */
-        1, 1, 0,  /* long */
-        1, 1, 0,  /* long long */
+        2, 2, 0,  /* long */
+        4, 4, 0,  /* long long */
         1, 1, 0,  /* float */
-        1, 1, 0,  /* double */
-        1, 1, 0,  /* long double */
+        2, 2, 0,  /* double */
+        4, 4, 0,  /* long double */
         1, 1, 0,  /* T * */
         0, 1, 0,  /* struct */
         0,        /* little_endian */
