@@ -392,7 +392,7 @@ void emit(Node p) {
 }
 static int moveself(Node p) {
 	return p->x.copy
-	&& p->syms[RX]->x.name == p->x.kids[0]->syms[RX]->x.name;
+	&& p->syms[RX] && p->syms[RX]->x.name == p->x.kids[0]->syms[RX]->x.name;
 }
 int move(Node p) {
 	p->x.copy = 1;
@@ -627,6 +627,23 @@ static void ralloc(Node p) {
 	mask[1] = tmask[1];
 	assert(p);
 	debug(fprint(stderr, "(rallocing %x)\n", p));
+/*
+    debug({
+        fprintf(stderr, "ralloc called on %x (%s)\n", p, opname(p->op));
+        if (p->syms[RX])
+            fprintf(stderr, "    sclass: %d, name: %s\n", p->syms[RX]->sclass, p->syms[RX]->name);
+        if (p->kids[0]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[0], opname(p->kids[0]->op));
+            if (p->kids[0]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[0]->syms[RX]->sclass, p->kids[0]->syms[RX]->name);
+        }
+        if (p->kids[1]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[1], opname(p->kids[1]->op));
+            if (p->kids[1]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[1]->syms[RX]->sclass, p->kids[1]->syms[RX]->name);
+        }
+    });
+*/
 	for (i = 0; i < NELEMS(p->x.kids) && p->x.kids[i]; i++) {
 		Node kid = p->x.kids[i];
 		Symbol r = kid->syms[RX];

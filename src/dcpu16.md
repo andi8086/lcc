@@ -1,10 +1,11 @@
+
 %{
-enum {RGA=0, RGB=1, RGC=2, RGX=3, RGY=4, RGZ=5, RGI=6};
+enum {RGA=0, RGB=1, RGC=2, RGX=3, RGY=4, RGZ=5};
 
 #include "c.h"
 
-#define TMP_REG 0x07
-#define VAR_REG (0x7F ^ TMP_REG)
+#define TMP_REG 0x3E    
+#define VAR_REG (0x3E ^ TMP_REG)
 
 #define NODEPTR_TYPE Node
 #define OP_LABEL(p) ((p)->op)
@@ -38,12 +39,12 @@ static void progend(void);
 static void segment(int); 
 static void space(int); 
 static void target(Node);
-static int memop(Node);
-static int sametree(Node,Node);
-static int isfptr(Node,int,int);
+static int memop(Node, int);
+static int ncmemop(Node, int);
+static int sametree(Node, Node);
 
-static void pushstack(int n);
-static void popstack(int n);
+static void pushstack(int);
+static void popstack(int);
 
 // Local vars here
 
@@ -183,115 +184,166 @@ acon:   CNSTP1  "%a" 1
 addr:   acon            "%0"
 addr:   ADDI1(reg,acon) "%1+%0"
 addr:   reg             "%0"
-addr:   ADDRGP1         "%a"
+addr:   ADDRGP1         "%a" 1
 addr:   ADDRFP1         "#" 1
 addr:   ADDRLP1         "#" 1
 
 reg:    con "SET %c, %0\n" 1
+reg:    mem "SET %c, %0\n" 1
 
 mem:    INDIRF1(addr)   "[%0]"
 mem:    INDIRI1(addr)   "[%0]"
 mem:    INDIRU1(addr)   "[%0]"
 mem:    INDIRP1(addr)   "[%0]"
 
-aval:   addr    "[%0]"
-aval:   reg     "%0"
 bval:   reg     "%0"
 bval:   con     "%0"
 bval:   mem     "%0"
 
-stmt:   ASGNF1(aval,bval)   "?SET %0, %1\n" 1
-stmt:   ASGNI1(aval,bval)   "?SET %0, %1\n" 1
-stmt:   ASGNU1(aval,bval)   "?SET %0, %1\n" 1
-stmt:   ASGNP1(aval,bval)   "?SET %0, %1\n" 1
+stmt:   ASGNF1(addr,bval)   "SET [%0], %1\n" 1
+stmt:   ASGNI1(addr,bval)   "SET [%0], %1\n" 1
+stmt:   ASGNU1(addr,bval)   "SET [%0], %1\n" 1
+stmt:   ASGNP1(addr,bval)   "SET [%0], %1\n" 1
 
 reg:    BCOMI1(bval)                "SET %c, 0xffff\nXOR %c, %0\n" 3
 reg:    BCOMU1(bval)                "SET %c, 0xffff\nXOR %c, %0\n" 3
-stmt:   ASGNI1(mem,BCOMI1(bval))    "SET %c, 0xffff\nXOR %c, %0\n" 3
-stmt:   ASGNU1(mem,BCOMU1(bval))    "SET %c, 0xffff\nXOR %c, %0\n" 3
+stmt:   ASGNI1(addr,BCOMI1(bval))   "SET [%0], 0xffff\nXOR [%0], %1\n" 3
+stmt:   ASGNU1(addr,BCOMU1(bval))   "SET [%0], 0xffff\nXOR [%0], %1\n" 3
 
-reg:    CVFI1(bval)             "SET %c, %0\nSHR %c, 8\n" 4
-stmt:   ASGNI1(mem,CVFI1(bval)) "SET %c, %0\nSHR %c, 8\n" 4
+reg:    CVFI1(bval)                 "SET %c, %0\nSHR %c, 8\n" 4
+stmt:   ASGNI1(addr,CVFI1(bval))    "SET [%0], %1\nSHR [%0], 8\n" 4
 
-reg:    CVIF1(bval)                "SET %c, %0\nSHL %c, 8\n" 4
-stmt:   ASGNF1(mem,CVIF1(bval))    "SET %c, %0\nSHL %c, 8\n" 4
-reg:    CVIU1(bval)                "SET %c, %0\n" 1
-stmt:   ASGNU1(mem,CVIF1(bval))    "SET %c, %0\n" 1
+reg:    CVIF1(bval)                 "SET %c, %0\nSHL %c, 8\n" 4
+reg:    CVIU1(bval)                 "SET %c, %0\n" 1
+stmt:   ASGNF1(addr,CVIF1(bval))    "SET [%0], %1\nSHL [%0], 8\n" 4
+stmt:   ASGNU1(addr,CVIF1(bval))    "SET [%0], %1\n" 1
 
-reg:    CVUI1(bval)                "SET %c, %0\n" 1
-stmt:   ASGNI1(mem,CVUI1(bval))    "SET %c, %0\n" 1
-reg:    CVUP1(bval)                "SET %c, %0\n" 1
-stmt:   ASGNP1(mem,CVUP1(bval))    "SET %c, %0\n" 1
+reg:    CVUI1(bval)                 "SET %c, %0\n" 1
+reg:    CVUP1(bval)                 "SET %c, %0\n" 1
+stmt:   ASGNI1(addr,CVUI1(bval))    "SET [%0], %1\n" 1
+stmt:   ASGNP1(addr,CVUP1(bval))    "SET [%0], %1\n" 1
 
-reg:    CVPU1(bval)                "SET %c, %0\n" 1
-stmt:   ASGNU1(mem,CVPU1(bval))    "SET %c, %0\n" 1
+reg:    CVPU1(bval)                 "SET %c, %0\n" 1
+stmt:   ASGNU1(addr,CVPU1(bval))    "SET [%0], %1\n" 1
 
-reg:    NEGF1(bval)                "SET %c, 0x0000\nSUB %c, %0\n" 4
-stmt:   ASGNF1(mem,NEGI1(bval))    "SET %c, 0x0000\nSUB %c, %0\n" 4
-reg:    NEGI1(bval)                "SET %c, 0x0000\nSUB %c, %0\n" 4
-stmt:   ASGNI1(mem,NEGI1(bval))    "SET %c, 0x0000\nSUB %c, %0\n" 4
+reg:    NEGF1(bval)                 "SET %c, 0\nSUB %c, %0\n" 4
+reg:    NEGI1(bval)                 "SET %c, 0\nSUB %c, %0\n" 4
+stmt:   ASGNF1(addr,NEGI1(bval))    "SET [%0], 0\nSUB [%0], %1\n" 4
+stmt:   ASGNI1(addr,NEGI1(bval))    "SET [%0], 0\nSUB [%0], %1\n" 4
 
-reg:    ADDF1(bval,bval)                "SET %c, %0\nADD %c, %1\n" 3 
-stmt:   ASGNF1(mem,ADDF1(bval,bval))    "SET %c, %0\nADD %c, %1\n" 3 
-reg:    ADDI1(bval,bval)                "SET %c, %0\nADD %c, %1\n" 3
-stmt:   ASGNI1(mem,ADDI1(bval,bval))    "SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDU1(bval,bval)                "SET %c, %0\nADD %c, %1\n" 3
-stmt:   ASGNU1(mem,ADDU1(bval,bval))    "SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDP1(bval,bval)                "SET %c, %0\nADD %c, %1\n" 3
-stmt:   ASGNP1(mem,ADDP1(bval,bval))    "SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDF1(bval,bval)                "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDI1(bval,bval)                "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDU1(bval,bval)                "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDP1(bval,bval)                "?SET %c, %0\nADD %c, %1\n" 3
+stmt:   ASGNF1(addr,ADDF1(bval,bval))   "ADD [%0], %2\n" memop(a, 2) 
+stmt:   ASGNI1(addr,ADDI1(bval,bval))   "ADD [%0], %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,ADDU1(bval,bval))   "ADD [%0], %2\n" memop(a, 2)
+stmt:   ASGNP1(addr,ADDP1(bval,bval))   "ADD [%0], %2\n" memop(a, 2)
+stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [I], %2\nSET [%0], %1\nADD [%0], [I]\n" 6
+stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nADD [%0], [I]\n" 6
+stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nADD [%0], [I]\n" 6
+stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [I], %2\nSET [%0], %1\nADD [%0], [I]\n" 6
 
-reg:    BANDI1(bval,bval)                "SET %c, %0\nAND %c, %1\n" 2
-stmt:   ASGNI1(mem,BANDI1(bval,bval))    "SET %c, %0\nAND %c, %1\n" 2
-reg:    BANDU1(bval,bval)                "SET %c, %0\nAND %c, %1\n" 2
-stmt:   ASGNU1(mem,BANDU1(bval,bval))    "SET %c, %0\nAND %c, %1\n" 2
+reg:    BANDI1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" 2
+reg:    BANDU1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" 2
+stmt:   ASGNI1(addr,BANDI1(bval,bval))  "AND [%0], %2\n" memop(a, 1)
+stmt:   ASGNU1(addr,BANDU1(bval,bval))  "AND [%0], %2\n" memop(a, 1)
+stmt:   ASGNI1(addr,BANDI1(bval,bval))  "SET [%0], %1\nAND [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNU1(addr,BANDU1(bval,bval))  "SET [%0], %1\nAND [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNI1(addr,BANDI1(bval,bval))  "SET [I], %2\nSET [%0], %1\nAND [%0], [I]\n" 3
+stmt:   ASGNU1(addr,BANDU1(bval,bval))  "SET [I], %2\nSET [%0], %1\nAND [%0], [I]\n" 3
 
-reg:    BORI1(bval,bval)                "SET %c, %0\nBOR %c, %1\n" 2
-stmt:   ASGNI1(mem,BORI1(bval,bval))    "SET %c, %0\nBOR %c, %1\n" 2
-reg:    BORU1(bval,bval)                "SET %c, %0\nBOR %c, %1\n" 2
-stmt:   ASGNU1(mem,BORU1(bval,bval))    "SET %c, %0\nBOR %c, %1\n" 2
+reg:    BORI1(bval,bval)                "?SET %c, %0\nBOR %c, %1\n" 2
+reg:    BORU1(bval,bval)                "?SET %c, %0\nBOR %c, %1\n" 2
+stmt:   ASGNI1(addr,BORI1(bval,bval))   "BOR [%0], %2\n" memop(a, 1)
+stmt:   ASGNU1(addr,BORU1(bval,bval))   "BOR [%0], %2\n" memop(a, 1)
+stmt:   ASGNI1(addr,BORI1(bval,bval))   "SET [%0], %1\nBOR [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNU1(addr,BORU1(bval,bval))   "SET [%0], %1\nBOR [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNI1(addr,BORI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nBOR [%0], [I]\n" 3
+stmt:   ASGNU1(addr,BORU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nBOR [%0], [I]\n" 3
 
-reg:    BXORI1(bval,bval)                "SET %c, %0\nXOR %c, %1\n" 2
-stmt:   ASGNI1(mem,BXORI1(bval,bval))    "SET %c, %0\nXOR %c, %1\n" 2
-reg:    BXORU1(bval,bval)                "SET %c, %0\nXOR %c, %1\n" 2
-stmt:   ASGNU1(mem,BXORU1(bval,bval))    "SET %c, %0\nXOR %c, %1\n" 2
+reg:    BXORI1(bval,bval)               "?SET %c, %0\nXOR %c, %1\n" 2
+reg:    BXORU1(bval,bval)               "?SET %c, %0\nXOR %c, %1\n" 2
+stmt:   ASGNI1(addr,BXORI1(bval,bval))  "XOR [%0], %2\n" memop(a, 1)
+stmt:   ASGNU1(addr,BXORU1(bval,bval))  "XOR [%0], %2\n" memop(a, 1)
+stmt:   ASGNI1(addr,BXORI1(bval,bval))  "SET [%0], %1\nXOR [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [%0], %1\nXOR [%0], %2\n" ncmemop(a, 2)
+stmt:   ASGNI1(addr,BXORI1(bval,bval))  "SET [I], %2\nSET [%0], %1\nXOR [%0], [I]\n" 3
+stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [I], %2\nSET [%0], %1\nXOR [%0], [I]\n" 3
 
-reg:    DIVF1(bval,bval)                "SET %c, %0\nDIV %c, %1\n" 4 
-stmt:   ASGNF1(mem,DIVF1(bval,bval))    "SET %c, %0\nDIV %c, %1\n" 4 
-reg:    DIVI1(bval,bval)                "SET %c, %0\nDIV %c, %1\n" 4
-stmt:   ASGNI1(mem,DIVI1(bval,bval))    "SET %c, %0\nDIV %c, %1\n" 4
-reg:    DIVU1(bval,bval)                "SET %c, %0\nDIV %c, %1\n" 4
-stmt:   ASGNU1(mem,DIVU1(bval,bval))    "SET %c, %0\nDIV %c, %1\n" 4
+reg:    DIVF1(bval,bval)                "?SET %c, %0\nDIV %c, %1\n" 4 
+reg:    DIVI1(bval,bval)                "?SET %c, %0\nDIV %c, %1\n" 4
+reg:    DIVU1(bval,bval)                "?SET %c, %0\nDIV %c, %1\n" 4
+stmt:   ASGNF1(addr,DIVF1(bval,bval))   "DIV [%0], %2\n" memop(a, 3)
+stmt:   ASGNI1(addr,DIVI1(bval,bval))   "DIV [%0], %2\n" memop(a, 3)
+stmt:   ASGNU1(addr,DIVU1(bval,bval))   "DIV [%0], %2\n" memop(a, 3)
+stmt:   ASGNF1(addr,DIVF1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4) 
+stmt:   ASGNI1(addr,DIVI1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4)
+stmt:   ASGNU1(addr,DIVU1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4)
+stmt:   ASGNF1(addr,DIVF1(bval,bval))   "SET [I], %2\nSET [%0], %1\nDIV [%0], [I]\n" 5
+stmt:   ASGNI1(addr,DIVI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nDIV [%0], [I]\n" 5
+stmt:   ASGNU1(addr,DIVU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nDIV [%0], [I]\n" 5
 
-reg:    LSHI1(bval,bval)                "SET %c, %0\nSHL: %c, %0\n" 3
-stmt:   ASGNI1(mem,LSHI1(bval,bval))    "SET %c, %0\nSHL: %c, %0\n" 3
-reg:    LSHU1(bval,bval)                "SET %c, %0\nSHL: %c, %0\n" 3
-stmt:   ASGNU1(mem,LSHU1(bval,bval))    "SET %c, %0\nSHL: %c, %0\n" 3
+reg:    LSHI1(bval,bval)                "?SET %c, %0\nSHL: %c, %0\n" 3
+reg:    LSHU1(bval,bval)                "?SET %c, %0\nSHL: %c, %0\n" 3
+stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SHL: [%0], %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SHL: [%0], %2\n" memop(a, 2)
+stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SET [%0], %1\nSHL: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [%0], %1\nSHL: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSHL: [%0], [I]\n" 4
+stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSHL: [%0], [I]\n" 4
 
-reg:    MODI1(bval,bval)                "SET %c, %0\nMOD %c, %1\n" 4
-stmt:   ASGNI1(mem,MODI1(bval,bval))    "SET %c, %0\nMOD %c, %1\n" 4
-reg:    MODU1(bval,bval)                "SET %c, %0\nMOD %c, %1\n" 4
-stmt:   ASGNU1(mem,MODU1(bval,bval))    "SET %c, %0\nMOD %c, %1\n" 4
+reg:    MODI1(bval,bval)                "?SET %c, %0\nMOD %c, %1\n" 4
+reg:    MODU1(bval,bval)                "?SET %c, %0\nMOD %c, %1\n" 4
+stmt:   ASGNI1(addr,MODI1(bval,bval))   "MOD [%0], %2\n" memop(a, 3)
+stmt:   ASGNU1(addr,MODU1(bval,bval))   "MOD [%0], %2\n" memop(a, 3)
+stmt:   ASGNI1(addr,MODI1(bval,bval))   "SET [%0], %1\nMOD [%0], %2\n" ncmemop(a, 4)
+stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [%0], %1\nMOD [%0], %2\n" ncmemop(a, 4)
+stmt:   ASGNI1(addr,MODI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nMOD [%0], [I]\n" 5
+stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nMOD [%0], [I]\n" 5
 
-reg:    MULF1(bval,bval)                "SET %c, %0\nMUL %c, %1\nSET X, O\nSHR %c, 8\nSHL X, 8\nADD %c, X\n" 12
-stmt:   ASGNF1(mem,MULF1(bval,bval))    "SET %c, %0\nMUL %c, %1\nSET X, O\nSHR %c, 8\nSHL X, 8\nADD %c, X\n" 12
-reg:    MULI1(bval,bval)                "SET %c, %0\nMUL %c, %1\n" 3
-stmt:   ASGNI1(mem,MULI1(bval,bval))    "SET %c, %0\nMUL %c, %1\n" 3
-reg:    MULU1(bval,bval)                "SET %c, %0\nMUL %c, %1\n" 3
-stmt:   ASGNU1(mem,MULU1(bval,bval))    "SET %c, %0\nMUL %c, %1\n" 3
+reg:    MULF1(bval,bval)                "?SET %c, %0\nMUL %c, %1\nSET [I], O\nSHR %c, 8\nSHL [I], 8\nADD %c, X\n" 12
+reg:    MULI1(bval,bval)                "?SET %c, %0\nMUL %c, %1\n" 3
+reg:    MULU1(bval,bval)                "?SET %c, %0\nMUL %c, %1\n" 3
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "MUL [%0], %2\nSET [I], O\nSHR [%0], 8\nSHL [I], 8\nADD [%0], [I]\n" memop(a, 11)
+stmt:   ASGNI1(addr,MULI1(bval,bval))   "MUL [%0], %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,MULU1(bval,bval))   "MUL [%0], %2\n" memop(a, 2)
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\nSET [I], O\nSHR [%0], 8\nSHL [I], 8\nADD [%0], [I]\n" ncmemop(a, 12)
+stmt:   ASGNI1(addr,MULI1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,MULU1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [1+I], %2\nSET [%0], %1\nMUL [%0], [1+I]\nSET [I], O\nSHR [%0], 8\nSHL [I], 8\nADD [%0], [I]\n" 15
+stmt:   ASGNI1(addr,MULI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nMUL [%0], [I]\n" 4
+stmt:   ASGNU1(addr,MULU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nMUL [%0], [I]\n" 4
 
-reg:    RSHI1(bval,bval)                "SET %c, %0\nSHR: %c, %0\n" 3
-stmt:   ASGNI1(mem,RSHI1(bval,bval))    "SET %c, %0\nSHR: %c, %0\n" 3
-reg:    RSHU1(bval,bval)                "SET %c, %0\nSHR: %c, %0\n" 3
-stmt:   ASGNU1(mem,RSHU1(bval,bval))    "SET %c, %0\nSHR: %c, %0\n" 3
+reg:    RSHI1(bval,bval)                "?SET %c, %0\nSHR: %c, %0\n" 3
+reg:    RSHU1(bval,bval)                "?SET %c, %0\nSHR: %c, %0\n" 3
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSHR: [%0], [I]\n" 4
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSHR: [%0], [I]\n" 4
 
-reg:    SUBF1(bval,bval)                "SET %c, %0\nSUB %c, %1\n" 3 
-stmt:   ASGNF1(mem,SUBF1(bval,bval))    "SET %c, %0\nSUB %c, %1\n" 3 
-reg:    SUBI1(bval,bval)                "SET %c, %0\nSUB %c, %1\n" 3
-stmt:   ASGNI1(mem,SUBI1(bval,bval))    "SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBU1(bval,bval)                "SET %c, %0\nSUB %c, %1\n" 3
-stmt:   ASGNU1(mem,SUBU1(bval,bval))    "SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBP1(bval,bval)                "SET %c, %0\nSUB %c, %1\n" 3
-stmt:   ASGNP1(mem,SUBP1(bval,bval))    "SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBF1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBI1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBU1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBP1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSUB: [%0], [I]\n" 4
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSUB: [%0], [I]\n" 4
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSUB: [%0], [I]\n" 4
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [I], %2\nSET [%0], %1\nSUB: [%0], [I]\n" 4
 
 stmt:   EQF1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4 
 stmt:   EQI1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
@@ -329,10 +381,10 @@ reg:    CALLU1(addr)    "^JSR %0\n" 2
 reg:    CALLP1(addr)    "^JSR %0\n" 2
 stmt:   CALLV(addr)     "^JSR %0\n" 2
 
-stmt:   RETF1(bval) "# return float\n" 2
-stmt:   RETI1(bval) "# return int\n" 2
-stmt:   RETU1(bval) "# return uint\n" 2
-stmt:   RETP1(bval) "# return ptr\n" 2
+stmt:   RETF1(reg) "# return float\n" 2
+stmt:   RETI1(reg) "# return int\n" 2
+stmt:   RETU1(reg) "# return uint\n" 2
+stmt:   RETP1(reg) "# return ptr\n" 2
 
 stmt:   JUMPV(addr) "SET PC, %0\n" 1
 
@@ -356,7 +408,6 @@ static void progbeg(int argc, char *argv[]) {
     reg[RGA] = mkreg("A",RGA,1,IREG);
     reg[RGB] = mkreg("B",RGB,1,IREG);
     reg[RGC] = mkreg("C",RGC,1,IREG);
-    reg[RGI] = mkreg("I",RGI,1,IREG);
     reg[RGX] = mkreg("X",RGX,1,IREG);
     reg[RGY] = mkreg("Y",RGY,1,IREG);
     reg[RGZ] = mkreg("Z",RGZ,1,IREG);
@@ -369,8 +420,7 @@ static void progbeg(int argc, char *argv[]) {
     vmask[FREG] = 0;
 
     print(";\n;DCPU-16 ASM Generated by LCC 4.2 (dcpu-lcc v0.1)\n;\n");
-    print("JSR _main\n");
-    print(":__crash SET PC, __crash\n");
+    print("SET PC, __start\n");
 }
 
 static Symbol rmap(int opk) {
@@ -390,10 +440,32 @@ static void segment(int n) {
 }
 
 static void progend(void) {
+    print(":__start\n");
+    print("SET I, PC\n");
+    print("ADD I, 4\n");
+    print("JSR _main\n");
+    print(":__crash\n");
+    print("SET PC, __crash\n");
 }
 
 static void target(Node p) {
-    debug(fprintf(stderr, "target called on %s\n", opname(p->op)));
+/*
+    debug({
+        fprintf(stderr, "target called on %x (%s)\n", p, opname(p->op));
+        if (p->syms[RX])
+            fprintf(stderr, "    sclass: %d, name: %s\n", p->syms[RX]->sclass, p->syms[RX]->name);           
+        if (p->kids[0]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[0], opname(p->kids[0]->op));
+            if (p->kids[0]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[0]->syms[RX]->sclass, p->kids[0]->syms[RX]->name);
+        }
+        if (p->kids[1]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[1], opname(p->kids[1]->op));
+            if (p->kids[1]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[1]->syms[RX]->sclass, p->kids[1]->syms[RX]->name);
+        }
+    });
+*/
     assert(p);
     switch (specific(p->op)) {
         case RET+F:
@@ -407,8 +479,28 @@ static void target(Node p) {
         case CALL+U:
         case CALL+P:
             setreg(p, reg[RGA]);
-            break;        
+            break;
+        
+               
     }
+
+/*
+    debug({
+        fprintf(stderr, "target returning on %x (%s)\n", p, opname(p->op));
+        if (p->syms[RX])
+            fprintf(stderr, "    sclass: %d, name: %s\n", p->syms[RX]->sclass, p->syms[RX]->name);           
+        if (p->kids[0]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[0], opname(p->kids[0]->op));
+            if (p->kids[0]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[0]->syms[RX]->sclass, p->kids[0]->syms[RX]->name);
+        }
+        if (p->kids[1]) {
+            fprintf(stderr, "    %x (%s)\n", p->kids[1], opname(p->kids[1]->op));
+            if (p->kids[1]->syms[RX])
+                fprintf(stderr, "        sclass: %d, name: %s\n", p->kids[1]->syms[RX]->sclass, p->kids[1]->syms[RX]->name);
+        }
+    });
+*/
 }
 
 static void clobber(Node p) {
@@ -424,51 +516,35 @@ static void clobber(Node p) {
     }
 }
 
-int memop(Node p) {
-}
-
-int sametree(Node p, Node q) {
-}
 
 static void emit2(Node p) {
     int localoffset;
     int argoffset;
     long double fltval;
+    int op = specific(p->op);
+    int opsz = opsize(p->op);
 
-    int op = specific(p->op); 
-    if (opsize(p->op) == 1) {
-        switch(op) {
-            case CNST+F:
-                fltval = p->syms[0]->u.c.v.d;
-                print("%d", (short)(fltval*256));
-                break;
-            case ARG+F:
-            case ARG+I:
-            case ARG+U:
-            case ARG+P:
-                break;
-            case CALL+F:
-            case CALL+I:
-            case CALL+U:
-            case CALL+P:
-                argoffset = p->syms[0]->u.c.v.i;
-                //pop stack args
-                popstack(argoffset);
-                break;
-            case ADDRL+P:
-                localoffset = p->syms[0]->x.offset + maxoffset;
-                if ( localoffset )
-                    print("%d+J", localoffset);
-                else
-                    print("J");
-                break;
-            case ADDRF+P:
-                print("%d+J", p->syms[0]->x.offset);
-                break;
-        }
-    }
-    else {
-        //TODO ;)
+    switch(op) {
+        case CNST+F:
+            fltval = p->syms[0]->u.c.v.d;
+            print("%d", (short)(fltval*256));
+            break;
+        case ARG+F: case ARG+I: case ARG+U: case ARG+P:
+            break;
+        case CALL+F: case CALL+I: case CALL+U: case CALL+P:
+            argoffset = p->syms[0]->u.c.v.i;
+            popstack(argoffset);
+            break;
+        case ADDRL+P:
+            localoffset = p->syms[0]->x.offset + maxoffset;
+            if ( localoffset )
+                print("%d+J", localoffset);
+            else
+                print("J");
+            break;
+        case ADDRF+P:
+            print("%d+J", p->syms[0]->x.offset);
+            break;
     }
 }
 
@@ -497,7 +573,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     
     usedmask[IREG] = 0;
     usedmask[FREG] = 0;
-    freemask[IREG] = TMP_REG | VAR_REG;
+    freemask[IREG] = TMP_REG | VAR_REG | (1<<RGA);
     freemask[FREG] = 0;
 
     maxargoffset = 0;
@@ -554,13 +630,13 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
 static void defsymbol(Symbol p) {
     if (p->scope >= LOCAL && p->sclass == STATIC)
-        p->x.name = stringf("L%d", genlabel(1));
+        p->x.name = stringf("_s_%d", genlabel(1));
     else if (p->generated)
-        p->x.name = stringf("L%s", p->name);
+        p->x.name = stringf("_L%s", p->name);
     else if (p->scope == GLOBAL || p->sclass == EXTERN)
-        p->x.name = stringf("_%s",p->name);
+        p->x.name = stringf("_g_%s",p->name);
     else if (p->scope == CONSTANTS && (isint(p->type) || isptr(p->type)) && p->name[0] == '0' && p->name[1] == 'x')
-        p->x.name = stringf("0%sH", &p->name[2]);
+        p->x.name = stringf("_c_%s", &p->name[2]);
     else
         p->x.name = p->name;
 }
@@ -594,7 +670,7 @@ static void import(Symbol p) {
 
 static void global(Symbol p) {
     //assert(p->type->align == 1);
-    print(":%s\n", p->x.name);
+    //print(":%s\n", p->x.name);
 }
 
 static void space(int n) {
@@ -615,6 +691,37 @@ static void popstack(int n) {
         print("SET POP, POP\n", n);
     else if (n == 1)
         print("SET POP, SP\n");
+}
+
+static int memop(Node p, int defaultcost) {
+    assert(p);
+    assert(generic(p->op) == ASGN);
+    assert(p->kids[0]);
+    assert(p->kids[1]);
+
+    if (generic(p->kids[1]->kids[0]->op) == INDIR && sametree(p->kids[0], p->kids[1]->kids[0]->kids[0]))
+        return defaultcost;
+    else
+        return LBURG_MAX;
+}
+
+static int ncmemop(Node p, int defaultcost) {
+    assert(p);
+    assert(generic(p->op) == ASGN);
+    assert(p->kids[0]);
+    assert(p->kids[1]);
+  
+    if (generic(p->kids[1]->kids[1]->op) == INDIR && sametree(p->kids[0], p->kids[1]->kids[1]->kids[0]))
+        return LBURG_MAX;
+
+    return defaultcost;
+}
+
+static int sametree(Node p, Node q) {
+        return p == NULL && q == NULL
+        || p && q && p->op == q->op && p->syms[0] == q->syms[0]
+                && sametree(p->kids[0], q->kids[0])
+                && sametree(p->kids[1], q->kids[1]);
 }
 
 Interface dcpu16IR = {
