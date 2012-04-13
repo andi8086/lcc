@@ -676,7 +676,13 @@ static void defaddress(Symbol p) {
 }
 
 static void defstring(int n, char *str) {
-    print("DAT \"%s\"\n", str);
+    int i;
+    for ( i = 0; i < n; i++ ) {
+        short v = (short)(*(str+i));
+        print("DAT ");
+        emithex(v);
+        print(" ;%c\n", *(str+i));
+    }
 }
 
 static void export(Symbol p) {
