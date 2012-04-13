@@ -650,6 +650,11 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     int i,nreg,nfreg,nargs;
     long fused;
     Symbol fs;
+
+    usedmask[IREG] = 0;
+    usedmask[FREG] = 0;
+    freemask[IREG] = TMP_REG | (1<<RGA);
+    freemask[FREG] = 0;
     
     maxargoffset = 0;
     offset = maxoffset = 0;
