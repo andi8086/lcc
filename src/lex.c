@@ -713,10 +713,10 @@ static Symbol icon(unsigned long n, int overflow, int base) {
 		cp += 1;
 	} else if (overflow || n > longtype->u.sym->u.limits.max.i)
 		tval.type = unsignedlong;
-	else if (n > inttype->u.sym->u.limits.max.i)
-		tval.type = longtype;
 	else if (base != 10 && n > inttype->u.sym->u.limits.max.i)
 		tval.type = unsignedtype;
+	else if (n > inttype->u.sym->u.limits.max.i)
+		tval.type = longtype;
 	else
 		tval.type = inttype;
 	switch (tval.type->op) {

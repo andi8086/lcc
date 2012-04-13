@@ -1,4 +1,3 @@
-
 %{
 enum {RGA=0, RGB=1, RGC=2, RGX=3, RGY=4, RGZ=5};
 
@@ -668,7 +667,33 @@ static void address(Symbol q, Symbol p, long n) {
 }
 
 static void defconst(int suffix, int size, Value v) {
-    debug(fprintf(stderr, "defconst called\n"));
+    if (suffix == F && size == 1) {
+        if ( v.d < 0 ) {
+            print("DAT ");
+            emithex((short)(v.d*256));
+            print(" ;%f\n", v.d);
+        }
+        else {
+            print("DAT %d ;%f\n", (short)(v.d*256), v.d);
+        }
+    }
+    else if (suffix == I && size == 1) {
+        if (v.i < 0 ) {
+            print("DAT ");
+            emithex((short)v.i);
+            print(" ;%d\n", v.i);
+        }
+        else {
+            print("DAT %d\n");
+        }
+    }
+    else if (suffix == U && size == 1) {
+        print("DAT %d\n", (unsigned)v.u);
+    }
+    else if (suffix == P && size == 1) {
+        print("DAT %d\n", (unsigned)v.p);
+    }
+    else assert(0);
 }
 
 static void defaddress(Symbol p) {
@@ -701,7 +726,7 @@ static void global(Symbol p) {
 static void space(int n) {
     int i;
     for (i = 0; i < n; i++)
-        print("DAT 0x00\n", n);
+        print("DAT 0\n", n);
 }
 
 static void pushstack(int n) {
