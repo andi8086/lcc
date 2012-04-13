@@ -360,9 +360,9 @@ stmt:   GTF1(bval,bval) "IFG %0, %1\nSET PC, %a\n" 4
 stmt:   GTI1(bval,bval) "IFG %0, %1\nSET PC, %a\n" 4
 stmt:   GTU1(bval,bval) "IFG %0, %1\nSET PC, %a\n" 4
 
-stmt:   LEF1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0 %1\nSET PC %a\n" 6 
-stmt:   LEI1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0 %1\nSET PC %a\n" 6
-stmt:   LEU1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0 %1\nSET PC %a\n" 6
+stmt:   LEF1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6 
+stmt:   LEI1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
+stmt:   LEU1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
 
 stmt:   LTF1(bval,bval) "IFG %1, %0\nSET PC, %a\n" 4 
 stmt:   LTI1(bval,bval) "IFG %1, %0\nSET PC, %a\n" 4
@@ -624,7 +624,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     }
 
     // prologue
-    print(":_%s ;maxoffset: %d maxargoffset: %d\n", f->name, maxoffset, maxargoffset);
+    print(":%s ;maxoffset: %d maxargoffset: %d\n", f->x.name, maxoffset, maxargoffset);
     print("SET PUSH, J\n");
 
     //push locals
@@ -644,14 +644,21 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 }
 
 static void defsymbol(Symbol p) {
+    debug({
+        if (p->type)
+            fprintf(stderr, "defsymbol called on %s %d\n", p->name, p->type->op);
+        else
+            fprintf(stderr, "defsymbol called on %s %d\n", p->name, p->scope);
+
+    });
     if (p->scope >= LOCAL && p->sclass == STATIC)
-        p->x.name = stringf("_s_%d", genlabel(1));
+        p->x.name = stringf("_%d", genlabel(1));
     else if (p->generated)
         p->x.name = stringf("_L%s", p->name);
     else if (p->scope == GLOBAL || p->sclass == EXTERN)
-        p->x.name = stringf("_g_%s",p->name);
+        p->x.name = stringf("_%s",p->name);
     else if (p->scope == CONSTANTS && (isint(p->type) || isptr(p->type)) && p->name[0] == '0' && p->name[1] == 'x')
-        p->x.name = stringf("_c_%s", &p->name[2]);
+        p->x.name = stringf("_%s", &p->name[2]);
     else
         p->x.name = p->name;
 }
