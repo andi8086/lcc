@@ -1,10 +1,10 @@
 %{
-enum {RGA=0, RGB=1, RGC=2, RGX=3, RGY=4, RGZ=5};
+enum {RGA=0, RGB=1, RGC=2, RGX=3, RGY=4, RGZ=5, RGI=6};
 
 #include "c.h"
 
-#define TMP_REG 0x3E    
-#define VAR_REG (0x3E ^ TMP_REG)
+#define TMP_REG 0x7E
+#define VAR_REG (0x7E ^ TMP_REG)
 
 #define NODEPTR_TYPE Node
 #define OP_LABEL(p) ((p)->op)
@@ -246,10 +246,10 @@ stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nADD [%0], [__scratch]\n" 6
-stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nADD [%0], [__scratch]\n" 6
-stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nADD [%0], [__scratch]\n" 6
-stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nADD [%0], [__scratch]\n" 6
+stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
 
 reg:    BANDI1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" 2
 reg:    BANDU1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" 2
@@ -257,8 +257,8 @@ stmt:   ASGNI1(addr,BANDI1(bval,bval))  "AND [%0], %2\n" memop(a, 1)
 stmt:   ASGNU1(addr,BANDU1(bval,bval))  "AND [%0], %2\n" memop(a, 1)
 stmt:   ASGNI1(addr,BANDI1(bval,bval))  "SET [%0], %1\nAND [%0], %2\n" ncmemop(a, 2)
 stmt:   ASGNU1(addr,BANDU1(bval,bval))  "SET [%0], %1\nAND [%0], %2\n" ncmemop(a, 2)
-stmt:   ASGNI1(addr,BANDI1(bval,bval))  "SET [__scratch], %2\nSET [%0], %1\nAND [%0], [__scratch]\n" 3
-stmt:   ASGNU1(addr,BANDU1(bval,bval))  "SET [__scratch], %2\nSET [%0], %1\nAND [%0], [__scratch]\n" 3
+stmt:   ASGNI1(addr,BANDI1(bval,bval))  "SET [__scratch0], %2\nSET [%0], %1\nAND [%0], [__scratch0]\n" 3
+stmt:   ASGNU1(addr,BANDU1(bval,bval))  "SET [__scratch0], %2\nSET [%0], %1\nAND [%0], [__scratch0]\n" 3
 
 reg:    BORI1(bval,bval)                "?SET %c, %0\nBOR %c, %1\n" 2
 reg:    BORU1(bval,bval)                "?SET %c, %0\nBOR %c, %1\n" 2
@@ -266,8 +266,8 @@ stmt:   ASGNI1(addr,BORI1(bval,bval))   "BOR [%0], %2\n" memop(a, 1)
 stmt:   ASGNU1(addr,BORU1(bval,bval))   "BOR [%0], %2\n" memop(a, 1)
 stmt:   ASGNI1(addr,BORI1(bval,bval))   "SET [%0], %1\nBOR [%0], %2\n" ncmemop(a, 2)
 stmt:   ASGNU1(addr,BORU1(bval,bval))   "SET [%0], %1\nBOR [%0], %2\n" ncmemop(a, 2)
-stmt:   ASGNI1(addr,BORI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nBOR [%0], [__scratch]\n" 3
-stmt:   ASGNU1(addr,BORU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nBOR [%0], [__scratch]\n" 3
+stmt:   ASGNI1(addr,BORI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nBOR [%0], [__scratch0]\n" 3
+stmt:   ASGNU1(addr,BORU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nBOR [%0], [__scratch0]\n" 3
 
 reg:    BXORI1(bval,bval)               "?SET %c, %0\nXOR %c, %1\n" 2
 reg:    BXORU1(bval,bval)               "?SET %c, %0\nXOR %c, %1\n" 2
@@ -275,8 +275,8 @@ stmt:   ASGNI1(addr,BXORI1(bval,bval))  "XOR [%0], %2\n" memop(a, 1)
 stmt:   ASGNU1(addr,BXORU1(bval,bval))  "XOR [%0], %2\n" memop(a, 1)
 stmt:   ASGNI1(addr,BXORI1(bval,bval))  "SET [%0], %1\nXOR [%0], %2\n" ncmemop(a, 2)
 stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [%0], %1\nXOR [%0], %2\n" ncmemop(a, 2)
-stmt:   ASGNI1(addr,BXORI1(bval,bval))  "SET [__scratch], %2\nSET [%0], %1\nXOR [%0], [__scratch]\n" 3
-stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [__scratch], %2\nSET [%0], %1\nXOR [%0], [__scratch]\n" 3
+stmt:   ASGNI1(addr,BXORI1(bval,bval))  "SET [__scratch0], %2\nSET [%0], %1\nXOR [%0], [__scratch0]\n" 3
+stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [__scratch0], %2\nSET [%0], %1\nXOR [%0], [__scratch0]\n" 3
 
 reg:    DIVF1(bval,bval)                "?SET %c, %0\nDIV %c, %1\n" 4 
 reg:    DIVI1(bval,bval)                "?SET %c, %0\nDIV %c, %1\n" 4
@@ -287,9 +287,9 @@ stmt:   ASGNU1(addr,DIVU1(bval,bval))   "DIV [%0], %2\n" memop(a, 3)
 stmt:   ASGNF1(addr,DIVF1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4) 
 stmt:   ASGNI1(addr,DIVI1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4)
 stmt:   ASGNU1(addr,DIVU1(bval,bval))   "SET [%0], %1\nDIV [%0], %2\n" ncmemop(a, 4)
-stmt:   ASGNF1(addr,DIVF1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nDIV [%0], [__scratch]\n" 5
-stmt:   ASGNI1(addr,DIVI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nDIV [%0], [__scratch]\n" 5
-stmt:   ASGNU1(addr,DIVU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nDIV [%0], [__scratch]\n" 5
+stmt:   ASGNF1(addr,DIVF1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nDIV [%0], [__scratch0]\n" 5
+stmt:   ASGNI1(addr,DIVI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nDIV [%0], [__scratch0]\n" 5
+stmt:   ASGNU1(addr,DIVU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nDIV [%0], [__scratch0]\n" 5
 
 reg:    LSHI1(bval,bval)                "?SET %c, %0\nSHL: %c, %0\n" 3
 reg:    LSHU1(bval,bval)                "?SET %c, %0\nSHL: %c, %0\n" 3
@@ -297,8 +297,8 @@ stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SHL: [%0], %2\n" memop(a, 2)
 stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SHL: [%0], %2\n" memop(a, 2)
 stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SET [%0], %1\nSHL: [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [%0], %1\nSHL: [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSHL: [%0], [__scratch]\n" 4
-stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSHL: [%0], [__scratch]\n" 4
+stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSHL: [%0], [__scratch0]\n" 4
+stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSHL: [%0], [__scratch0]\n" 4
 
 reg:    MODI1(bval,bval)                "?SET %c, %0\nMOD %c, %1\n" 4
 reg:    MODU1(bval,bval)                "?SET %c, %0\nMOD %c, %1\n" 4
@@ -306,21 +306,21 @@ stmt:   ASGNI1(addr,MODI1(bval,bval))   "MOD [%0], %2\n" memop(a, 3)
 stmt:   ASGNU1(addr,MODU1(bval,bval))   "MOD [%0], %2\n" memop(a, 3)
 stmt:   ASGNI1(addr,MODI1(bval,bval))   "SET [%0], %1\nMOD [%0], %2\n" ncmemop(a, 4)
 stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [%0], %1\nMOD [%0], %2\n" ncmemop(a, 4)
-stmt:   ASGNI1(addr,MODI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nMOD [%0], [__scratch]\n" 5
-stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nMOD [%0], [__scratch]\n" 5
+stmt:   ASGNI1(addr,MODI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nMOD [%0], [__scratch0]\n" 5
+stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nMOD [%0], [__scratch0]\n" 5
 
-reg:    MULF1(bval,bval)                "?SET %c, %0\nMUL %c, %1\nSET [__scratch], O\nSHR %c, 8\nSHL [__scratch], 8\nADD %c, X\n" 12
+reg:    MULF1(bval,bval)                "?SET %c, %0\nMUL %c, %1\nSET [__scratch0], O\nSHR %c, 8\nSHL [__scratch0], 8\nADD %c, X\n" 12
 reg:    MULI1(bval,bval)                "?SET %c, %0\nMUL %c, %1\n" 3
 reg:    MULU1(bval,bval)                "?SET %c, %0\nMUL %c, %1\n" 3
-stmt:   ASGNF1(addr,MULF1(bval,bval))   "MUL [%0], %2\nSET [__scratch], O\nSHR [%0], 8\nSHL [__scratch], 8\nADD [%0], [__scratch]\n" memop(a, 11)
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "MUL [%0], %2\nSET [__scratch0], O\nSHR [%0], 8\nSHL [__scratch0], 8\nADD [%0], [__scratch0]\n" memop(a, 11)
 stmt:   ASGNI1(addr,MULI1(bval,bval))   "MUL [%0], %2\n" memop(a, 2)
 stmt:   ASGNU1(addr,MULU1(bval,bval))   "MUL [%0], %2\n" memop(a, 2)
-stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\nSET [__scratch], O\nSHR [%0], 8\nSHL [__scratch], 8\nADD [%0], [__scratch]\n" ncmemop(a, 12)
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\nSET [__scratch0], O\nSHR [%0], 8\nSHL [__scratch0], 8\nADD [%0], [__scratch0]\n" ncmemop(a, 12)
 stmt:   ASGNI1(addr,MULI1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,MULU1(bval,bval))   "SET [%0], %1\nMUL [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [1+__scratch], %2\nSET [%0], %1\nMUL [%0], [1+__scratch]\nSET [__scratch], O\nSHR [%0], 8\nSHL [__scratch], 8\nADD [%0], [__scratch]\n" 15
-stmt:   ASGNI1(addr,MULI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nMUL [%0], [__scratch]\n" 4
-stmt:   ASGNU1(addr,MULU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nMUL [%0], [__scratch]\n" 4
+stmt:   ASGNF1(addr,MULF1(bval,bval))   "SET [__scratch1], %2\nSET [%0], %1\nMUL [%0], [__scratch1]\nSET [__scratch0], O\nSHR [%0], 8\nSHL [__scratch0], 8\nADD [%0], [__scratch0]\n" 13
+stmt:   ASGNI1(addr,MULI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nMUL [%0], [__scratch0]\n" 4
+stmt:   ASGNU1(addr,MULU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nMUL [%0], [__scratch0]\n" 4
 
 reg:    RSHI1(bval,bval)                "?SET %c, %0\nSHR: %c, %0\n" 3
 reg:    RSHU1(bval,bval)                "?SET %c, %0\nSHR: %c, %0\n" 3
@@ -328,8 +328,8 @@ stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
 stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
 stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
-stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSHR: [%0], [__scratch]\n" 4
-stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSHR: [%0], [__scratch]\n" 4
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSHR: [%0], [__scratch0]\n" 4
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSHR: [%0], [__scratch0]\n" 4
 
 reg:    SUBF1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
 reg:    SUBI1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" 3
@@ -343,10 +343,10 @@ stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
-stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
-stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
-stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSUB [%0], [__scratch0]\n" 4
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSUB [%0], [__scratch0]\n" 4
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSUB [%0], [__scratch0]\n" 4
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [__scratch0], %2\nSET [%0], %1\nSUB [%0], [__scratch0]\n" 4
 
 stmt:   EQF1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4 
 stmt:   EQI1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
@@ -414,6 +414,7 @@ static void progbeg(int argc, char *argv[]) {
     reg[RGX] = mkreg("X",RGX,1,IREG);
     reg[RGY] = mkreg("Y",RGY,1,IREG);
     reg[RGZ] = mkreg("Z",RGZ,1,IREG);
+    reg[RGI] = mkreg("I",RGI,1,IREG);
     
     regw = mkwildcard(reg);
     
@@ -445,7 +446,14 @@ static void segment(int n) {
 }
 
 static void progend(void) {
-    print(":__scratch\n");
+    print(":__scratch0\n");
+    print("DAT 0\n");
+    print(":__scratch1\n");
+    print("DAT 0\n");
+    print(":__scratch2\n");
+    print("DAT 0\n");
+    print(":__scratch3\n");
+    print("DAT 0\n");
 }
 
 static void target(Node p) {
