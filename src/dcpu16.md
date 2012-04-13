@@ -339,14 +339,14 @@ stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
 stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
 stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
 stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SUB [%0], %2\n" memop(a, 2)
-stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [%0], %1\nSUB: [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB: [%0], [__scratch]\n" 4
-stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB: [%0], [__scratch]\n" 4
-stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB: [%0], [__scratch]\n" 4
-stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB: [%0], [__scratch]\n" 4
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [%0], %1\nSUB [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNF1(addr,SUBF1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
+stmt:   ASGNI1(addr,SUBI1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
+stmt:   ASGNU1(addr,SUBU1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
+stmt:   ASGNP1(addr,SUBP1(bval,bval))   "SET [__scratch], %2\nSET [%0], %1\nSUB [%0], [__scratch]\n" 4
 
 stmt:   EQF1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4 
 stmt:   EQI1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
@@ -542,7 +542,7 @@ static void emit2(Node p) {
             break;
         case ARG+F: case ARG+I: case ARG+U: case ARG+P:
             break;
-        case CALL+F: case CALL+I: case CALL+U: case CALL+P:
+        case CALL+F: case CALL+I: case CALL+U: case CALL+P: case CALL+V:
             argoffset = p->syms[0]->u.c.v.i;
             popstack(argoffset);
             break;
@@ -657,8 +657,8 @@ static void defsymbol(Symbol p) {
         p->x.name = stringf("_L%s", p->name);
     else if (p->scope == GLOBAL || p->sclass == EXTERN)
         p->x.name = stringf("_%s",p->name);
-    else if (p->scope == CONSTANTS && (isint(p->type) || isptr(p->type)) && p->name[0] == '0' && p->name[1] == 'x')
-        p->x.name = stringf("_%s", &p->name[2]);
+    //else if (p->scope == CONSTANTS && (isint(p->type) || isptr(p->type)) && p->name[0] == '0' && p->name[1] == 'x')
+    //    p->x.name = stringf("_%s", &p->name[2]);
     else
         p->x.name = p->name;
 }
@@ -740,16 +740,16 @@ static void pushstack(int n) {
     if (n > 1)
         print("SUB SP, %d\n", n);
     else if (n == 1)
-        print("SET PUSH, 0\n");
+        print("SET PUSH, 0 ;SP++\n");
 }
 
 static void popstack(int n) {
     if (n > 2)
         print("ADD SP, %d\n", n);
     else if (n == 2)
-        print("SET POP, POP\n", n);
+        print("SET POP, POP ;SP-=2\n", n);
     else if (n == 1)
-        print("SET POP, SP\n");
+        print("SET POP, SP ;SP--\n");
 }
 
 static int memop(Node p, int defaultcost) {
