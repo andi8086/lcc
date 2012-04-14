@@ -369,16 +369,16 @@ stmt:   ASGNF1(addr,MULF1(bval,mem))    "SET [__scratch1], %2\nSET [%0], %1\nMUL
 stmt:   ASGNI1(addr,MULI1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nMUL [%0], [__scratch0]\n" 4
 stmt:   ASGNU1(addr,MULU1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nMUL [%0], [__scratch0]\n" 4
 
-reg:    RSHI1(bval,bval)                "?SET %c, %0\nSHR: %c, %1\n" ncregop(a, 3)
-reg:    RSHU1(bval,bval)                "?SET %c, %0\nSHR: %c, %1\n" ncregop(a, 3)
-reg:    RSHI1(bval,reg)                 "SET [__scratch0], %1\nSET %c, %0\nSHR: %c, [__scratch0]\n" 4
-reg:    RSHU1(bval,reg)                 "SET [__scratch0], %1\nSET %c, %0\nSHR: %c, [__scratch0]\n" 4
-stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
-stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SHR: %0, %2\n" memop(a, 2)
-stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
-stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR: %0, %2\n" ncmemop(a, 3)
-stmt:   ASGNI1(addr,RSHI1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nSHR: [%0], [__scratch0]\n" 4
-stmt:   ASGNU1(addr,RSHU1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nSHR: [%0], [__scratch0]\n" 4
+reg:    RSHI1(bval,bval)                "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
+reg:    RSHU1(bval,bval)                "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
+reg:    RSHI1(bval,reg)                 "SET [__scratch0], %1\nSET %c, %0\nSHR %c, [__scratch0]\n" 4
+reg:    RSHU1(bval,reg)                 "SET [__scratch0], %1\nSET %c, %0\nSHR %c, [__scratch0]\n" 4
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR %0, %2\n" memop(a, 2)
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SHR %0, %2\n" memop(a, 2)
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR %0, %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR %0, %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,RSHI1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nSHR [%0], [__scratch0]\n" 4
+stmt:   ASGNU1(addr,RSHU1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nSHR [%0], [__scratch0]\n" 4
 
 reg:    SUBF1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
 reg:    SUBI1(bval,bval)                "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
