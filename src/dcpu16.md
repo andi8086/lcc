@@ -55,6 +55,7 @@ static void popstack(int, const char*);
 
 static Symbol reg[32];
 static Symbol regw;
+static short iscaddr = 1;
 
 const char hexdigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
@@ -188,16 +189,22 @@ con:    CNSTP1  "%a" 1
 acon:   CNSTU1  "%a" 1
 acon:   CNSTP1  "%a" 1
 
-addr:   acon            "%0"
-addr:   ADDI1(reg,acon) "%1+%0"
-addr:   reg             "%0"
-addr:   ADDRGP1         "%a" 1
-addr:   ADDRFP1         "#" 1
-addr:   ADDRLP1         "#" 1
+saddr:   acon            "%0"
+saddr:   reg             "%0"
+saddr:   ADDRGP1         "%a" 1
+caddr:   ADDRFP1         "%a+J" ((a->syms[0]->x.offset)?1:LBURG_MAX)
+caddr:   ADDRFP1         "J"    ((a->syms[0]->x.offset)?LBURG_MAX:1)
+caddr:   ADDRLP1         "#" 1
 
-reg:    con "SET %c, %0\n" 1
-reg:    mem "SET %c, %0\n" 1
-reg:    addr "SET %c, %0\n" 1
+addr:   ADDI1(reg,acon) "%1+%0"
+addr:   saddr           "%0"
+addr:   caddr           "%0"
+
+reg:    con     "SET %c, %0\n" 1
+reg:    mem     "SET %c, %0\n" 1
+reg:    saddr   "SET %c, %0\n" 1
+reg:    ADDRFP1 "#\n" 2
+reg:    ADDRLP1 "#\n" 2
 
 mem:    INDIRF1(addr)   "[%0]"
 mem:    INDIRI1(addr)   "[%0]"
@@ -618,16 +625,20 @@ static void emit2(Node p) {
             break;
         case ADDRL+P:
             localoffset = p->syms[0]->x.offset + maxoffset;
-            if ( localoffset )
-                print("%d+J", localoffset);
-            else
-                print("J");
-            break;
+            if ( p->x.inst ) {
+                if ( localoffset )
+                    print("SET %s, %d\nADD %s, J\n", p->syms[RX]->name, localoffset, p->syms[RX]->name);
+                else
+                    print("SET %s, J\n", p->syms[RX]->name);
+            }
+            else {
+                if ( localoffset )
+                    print("%d+J", localoffset);
+                else
+                    print("J");
+                break;
+            }
         case ADDRF+P:
-            if ( p->syms[0]->x.offset == 0 )
-                print("J");
-            else
-                print("%d+J", p->syms[0]->x.offset);
             break;
         case ASGN+B:
             assert(p->kids[0]);
@@ -683,6 +694,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     Symbol fs;
     Symbol r;
     Symbol tmp;
+    Symbol local;
 
     usedmask[IREG] = 0;
     usedmask[FREG] = 0;
@@ -731,21 +743,9 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
         if ( i > 2 ) {
             p->x.offset = q->x.offset = offset;
             p->x.name = q->x.name = stringf("%d",p->x.offset);
-            p->sclass = q->sclass = AUTO;
             offset += roundup(q->type->size,q->type->align);
         }
     }
-
-/*
-    for (i=0; callee[i]; i++) {
-        Symbol p = callee[i];
-        Symbol q = caller[i];
-        assert(q);
-        p->x.offset = q->x.offset = offset;
-        p->x.name = q->x.name = stringf("%d",p->x.offset);
-        p->sclass = q->sclass = AUTO;
-        offset += roundup(q->type->size,q->type->align);
-    }*/
 
     // prologue
     print(":%s       ;maxoffset: %d maxargoffset: %d\n", f->x.name, maxoffset, maxargoffset);
