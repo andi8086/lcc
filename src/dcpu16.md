@@ -426,7 +426,7 @@ stmt:   ARGF1(reg)                 "#\n" 2
 stmt:   ARGI1(reg)                 "#\n" 2
 stmt:   ARGU1(reg)                 "#\n" 2
 stmt:   ARGP1(reg)                 "#\n" 2
-stmt:   ASGNB(addr,INDIRB(addr))    "# block assign\n" 1
+stmt:   ASGNB(reg,INDIRB(reg))    "# block assign\n" 1
 
 reg:    CALLF1(addr)    "^JSR %0\n" callop(a, 2)
 reg:    CALLI1(addr)    "^JSR %0\n" callop(a, 2)
@@ -534,15 +534,15 @@ static void target(Node p) {
             break;
         case ARG+F: case ARG+I: case ARG+U: case ARG+P:
             switch (p->x.argno) {
-                case 1:
+                case 0:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting A\n", p->x.argno));
                     rtarget(p, 0, reg[RGA]);
                     break;
-                case 2:
+                case 1:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting B\n", p->x.argno));
                     rtarget(p, 0, reg[RGB]);
                     break;
-                case 3:
+                case 2:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting C\n", p->x.argno));
                     rtarget(p, 0, reg[RGC]);
                     break;
@@ -592,6 +592,7 @@ static void emit2(Node p) {
     long double fltval;
     int op = specific(p->op);
     int opsz = opsize(p->op);
+    int i;
 
     switch(op) {
         case CNST+F:
@@ -623,14 +624,25 @@ static void emit2(Node p) {
                 print("J");
             break;
         case ADDRF+P:
-            print("%d+J", p->syms[0]->x.offset);
+            if ( p->syms[0]->x.offset == 0 )
+                print("J");
+            else
+                print("%d+J", p->syms[0]->x.offset);
             break;
         case ASGN+B:
             assert(p->kids[0]);
             assert(p->kids[1]);
             assert(p->kids[1]->kids[0]);
 
-            print("BLOCK COPY? TROLOLOLOL\n");
+            print(";starting block copy (%s %s %d)\n", p->kids[0]->syms[RX]->x.name, p->kids[1]->kids[0]->syms[RX]->x.name, p->syms[0]->u.c.v.i);
+
+            for ( i = 0; i < p->syms[0]->u.c.v.i; i++ ) {
+                if ( i == 0 )
+                    print("SET [%s], [%s]\n", p->kids[0]->syms[RX]->x.name, p->kids[1]->kids[0]->syms[RX]->x.name);
+                else
+                    print("SET [%d+%s], [%d+%s]\n", i, p->kids[0]->syms[RX]->x.name, i, p->kids[1]->kids[0]->syms[RX]->x.name);
+            }
+
             break;
     }
 }
@@ -641,9 +653,16 @@ static void emithex(short i) {
 
 static void doarg(Node p) {
     assert(p && p->syms[0]);
-    debug(fprintf(stderr, "doarg called %ld\n", p->syms[0]->u.c.v.i));
+    Node q = p;
+    int argsleft = 0;
+    while ( generic(q->link->op) == ARG ) {
+        q = q->link;
+        argsleft++;
+    }
+
+    debug(fprintf(stderr, "doarg called %ld %d\n", p->syms[0]->u.c.v.i, argsleft));
     mkactual(1, p->syms[0]->u.c.v.i);
-    p->x.argno = argoffset;
+    p->x.argno = argsleft;
     debug(fprintf(stderr, "doarg done with argoffset=%d\n", argoffset));
 }
 
@@ -663,6 +682,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     long fused;
     Symbol fs;
     Symbol r;
+    Symbol tmp;
 
     usedmask[IREG] = 0;
     usedmask[FREG] = 0;
@@ -675,9 +695,11 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     for (i=0; callee[i]; i++) {
         Symbol p = callee[i];
         Symbol q = caller[i];
-        assert(q);
 
+        assert(q);
+        
         if ( i < 3 ) {
+            debug(fprintf(stderr, "in register args %s %d\n", q->name, q->generated));
             r = reg[i];
             p->x.offset = q->x.offset = 0;
             p->x.name = q->x.name = r->x.name;
@@ -687,7 +709,6 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
             //usedmask[n] |= r->x.regnode->mask;
             p->x.regnode = r->x.regnode;
             p->x.regnode->vbl = p;
-            p->x.name = r->x.name;
         }
         else {
             p->x.offset = q->x.offset = offset;
@@ -919,7 +940,7 @@ static int callop(Node p, int defaultcost) {
 
 static int argop(Node p, int defaultcost) {
     debug(fprintf(stderr, "argop called with argno=%d\n", p->x.argno));
-    if ( p->x.argno < 4 )
+    if ( p->x.argno < 3 )
         return LBURG_MAX;
     return defaultcost;
 }
