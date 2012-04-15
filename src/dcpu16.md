@@ -277,10 +277,10 @@ stmt:   ASGNF1(addr,ADDF1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,ADDI1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNU1(addr,ADDU1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNP1(addr,ADDP1(bval,bval))   "SET [%0], %1\nADD [%0], %2\n" ncmemop(a, 3)
-stmt:   ASGNF1(addr,ADDF1(bval,mem))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
-stmt:   ASGNI1(addr,ADDI1(bval,mem))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
-stmt:   ASGNU1(addr,ADDU1(bval,mem))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
-stmt:   ASGNP1(addr,ADDP1(bval,mem))   "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNF1(addr,ADDF1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNI1(addr,ADDI1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNU1(addr,ADDU1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
+stmt:   ASGNP1(addr,ADDP1(bval,mem))    "SET [__scratch0], %2\nSET [%0], %1\nADD [%0], [__scratch0]\n" 6
 
 reg:    BANDI1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)
 reg:    BANDU1(bval,bval)               "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)

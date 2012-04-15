@@ -1,0 +1,59 @@
+:__dispptr
+DAT 0x8000
+:__isprintf
+DAT 0x0000
+;
+;extern unsigned putchar( unsigned );
+;
+:_putchar
+SET B, [__dispptr]
+SET C, A
+AND C, 0x007F
+IFN C, 0x000A
+SET PC, __putchar_cont
+JSR __newline
+SET [__dispptr], B
+SET PC, POP
+:__putchar_cont
+SET [B], A
+ADD [__dispptr], 1
+SET PC, POP
+;
+;extern int puts( const char* );
+;
+:_puts
+SET B, [__dispptr]
+SET C, 0
+:__puts_loop
+IFN [A], 0x000A ;'\n'
+SET PC, __puts_std
+JSR __newline
+SET PC, __puts_cont
+ADD A, 1
+:__puts_std
+SET [B], [A]
+BOR [B], 0xF000
+ADD B, 1
+:__puts_cont
+IFG B, 0x817F
+SUB B, 0x0180
+ADD A, 1
+ADD C, 1
+IFN [A], 0
+SET PC, __puts_loop
+:__puts_done
+IFE [__isprintf], 0
+JSR __newline               ;newline at the end
+SET [__isprintf], 0
+ADD C, 1
+SET A, C
+SET [__dispptr], B
+SET PC, POP
+:__newline
+SET [__scratch0], B
+MOD [__scratch0], 0x0020
+ADD B, 0x0020
+SUB B, [__scratch0]
+IFG B, 0x817F
+SUB B, 0x0180
+SET PC, POP
