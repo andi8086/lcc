@@ -59,3 +59,39 @@ SUB B, I
 IFG B, 0x817F
 SUB B, 0x0180
 SET PC, POP
+;
+;extern char* itoa( int, char*, int );
+;
+:_global_itoa
+SET PUSH, X
+SET PUSH, Z
+SET X, B
+:__itoa_loop
+SET I, A
+MOD I, C
+ADD I, 48
+SET [B], I
+ADD B, 1
+DIV A, C
+IFN A, 0
+SET PC, __itoa_loop
+SET [B], 0
+SUB B, 1
+SET A, X
+SET Z, B
+SUB Z, X
+SHR Z, 1
+ADD Z, 1
+ADD Z, X
+:__itoa_loop2
+SET C, [A]
+SET [A], [B]
+SET [B], C
+ADD A, 1
+SUB B, 1
+IFN A, Z
+SET PC, __itoa_loop2
+SET A, X
+SET Z, POP
+SET X, POP
+SET PC, POP
