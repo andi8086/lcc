@@ -86,6 +86,8 @@ SET X, B
 SET I, A
 MOD I, C
 ADD I, 48
+IFG I, 57
+ADD I, 39
 SET [B], I
 ADD B, 1
 DIV A, C
