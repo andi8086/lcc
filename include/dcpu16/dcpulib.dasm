@@ -63,6 +63,22 @@ SET PC, POP
 ;extern char* itoa( int, char*, int );
 ;
 :_global_itoa
+SET PUSH, B
+IFG 0x7FFE, A
+SET PC, __itoa_cont
+SET [B], 45
+ADD B, 1
+SET I, 0
+SUB I, A
+SET A, I
+:__itoa_cont
+JSR _global_utoa
+SET A, POP
+SET PC, POP
+;
+;extern char* utoa( unsigned, char*, int );
+;
+:_global_utoa
 SET PUSH, X
 SET PUSH, Z
 SET X, B
