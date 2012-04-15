@@ -511,6 +511,8 @@ static void progend(void) {
     print("DAT 0\n");
     print(":_scratch3\n");
     print("DAT 0\n");
+    print(":_scratch4\n");
+    print("DAT 0,0,0,0,0,0,0,0\n");
 }
 
 static void target(Node p) {
@@ -833,12 +835,23 @@ static void defaddress(Symbol p) {
 
 static void defstring(int n, char *str) {
     int i;
+    char buf[32768];
+
+    memcpy( buf, str, n);
+    buf[n] = (char)0;
     for ( i = 0; i < n; i++ ) {
         short v = (short)(*(str+i));
-        print("DAT ");
-        emithex(v);
-        print(" ;%c\n", *(str+i));
+        if ( i == 0 ) {
+            print("DAT ");
+            emithex(v);
+        }
+        else {
+            print(", ");
+            emithex(v);
+        }
     }
+
+    print(" ;%s\n", buf);
 }
 
 static void export(Symbol p) {

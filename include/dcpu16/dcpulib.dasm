@@ -5,7 +5,7 @@ DAT 0x0000
 ;
 ;extern unsigned putchar( unsigned );
 ;
-:_putchar
+:_global_putchar
 SET B, [__dispptr]
 SET C, A
 AND C, 0x007F
@@ -21,7 +21,7 @@ SET PC, POP
 ;
 ;extern int puts( const char* );
 ;
-:_puts
+:_global_puts
 SET B, [__dispptr]
 SET C, 0
 :__puts_loop
@@ -42,18 +42,20 @@ ADD C, 1
 IFN [A], 0
 SET PC, __puts_loop
 :__puts_done
-IFE [__isprintf], 0
+IFN [__isprintf], 0
+SET PC, __puts_cont2
 JSR __newline               ;newline at the end
-SET [__isprintf], 0
 ADD C, 1
+:__puts_cont2
+SET [__isprintf], 0
 SET A, C
 SET [__dispptr], B
 SET PC, POP
 :__newline
-SET [__scratch0], B
-MOD [__scratch0], 0x0020
+SET I, B
+MOD I, 0x0020
 ADD B, 0x0020
-SUB B, [__scratch0]
+SUB B, I
 IFG B, 0x817F
 SUB B, 0x0180
 SET PC, POP
