@@ -3,6 +3,113 @@ DAT 0x8000
 :__isprintf
 DAT 0x0000
 ;
+;extern int printf( const char*, ... );
+;
+:_global_printf
+SET [_scratch0], POP
+SET PUSH, C
+SET PUSH, B
+SET [_scratch1], Z
+SET Z, SP
+SET PUSH, X
+SET PUSH, Y
+SET X, 0
+SET Y, A
+:__printf_loop
+IFE [Y], 0
+SET PC, __printf_done
+IFN [Y], 37 ;%
+SET PC, __printf_putc
+IFE [1+Y], 37 ;%
+SET PC, __printf_putpct
+IFE [1+Y], 115 ;s
+SET PC, __printf_puts
+IFE [1+Y], 100 ;d
+SET PC, __printf_putd
+IFE [1+Y], 117 ;u
+SET PC, __printf_putu
+IFE [1+Y], 102 ;f
+SET PC, __printf_putf
+IFE [1+Y], 112 ;p
+SET PC, __printf_putx
+IFE [1+Y], 120 ;x
+SET PC, __printf_putx
+SET PC, __printf_putc
+:__printf_putpct
+ADD Y, 1
+IFE [Y], 0
+SET PC, __printf_done
+SET PC, __printf_putc
+:__printf_puts
+ADD Y, 2
+SET A, [Z]
+ADD Z, 1
+SET [__isprintf], 1
+JSR _global_puts
+ADD X, A
+SET PC, __printf_loop
+:__printf_putd
+ADD Y, 2
+SET A, [Z]
+SET B, _scratch4
+SET C, 10
+ADD Z, 1
+JSR _global_itoa
+SET A, _scratch4
+SET [__isprintf], 1
+JSR _global_puts
+ADD X, A
+SET PC, __printf_loop
+:__printf_putu
+ADD Y, 2
+SET A, [Z]
+SET B, _scratch4
+SET C, 10
+ADD Z, 1
+JSR _global_utoa
+SET A, _scratch4
+SET [__isprintf], 1
+JSR _global_puts
+ADD X, A
+SET PC, __printf_loop
+:__printf_putf
+ADD Y, 2
+SET A, [Z]
+SET B, _scratch4
+ADD Z, 1
+JSR _global_ftoa
+SET A, _scratch4
+SET [__isprintf], 1
+JSR _global_puts
+ADD X, A
+SET PC, __printf_loop
+:__printf_putx
+ADD Y, 2
+SET A, [Z]
+SET B, _scratch4
+SET C, 16
+ADD Z, 1
+JSR _global_utoa
+SET A, _scratch4
+SET [__isprintf], 1
+JSR _global_puts
+ADD X, A
+SET PC, __printf_loop
+:__printf_putc
+SET A, [Y]
+BOR A, 0xF000
+JSR _global_putchar
+ADD X, 1
+ADD Y, 1
+SET PC, __printf_loop
+:__printf_done
+SET A, X
+SET Z, [_scratch1]
+SET Y, POP
+SET X, POP
+SET POP, POP
+SET PC, [_scratch0]
+;
 ;extern unsigned putchar( unsigned );
 ;
 :_global_putchar
@@ -154,11 +261,13 @@ SET PC, POP
 ;
 ;extern unsigned* getdispcur();
 ;
+:_global_getdispcur
 SET A, [__dispptr]
 SET PC, POP
 ;
 ;extern unsigned* setdispcur(unsigned*);
 ;
+:_global_setdispcur
 IFG A, 0x817F
 SET A, 0x817F
 IFG 0x8000, A
