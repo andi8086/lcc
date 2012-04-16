@@ -89,16 +89,11 @@ ADD B, 1
 SET I, 0
 SUB I, A
 SET A, I
+SET PEEK, A
 :__ftoa_cont
 SHR A, 8
 JSR _global_utoa
 SET A, POP
-IFG 0x7FFE, A
-SET PC, __ftoa_cont2
-SET I, 0
-SUB I, A
-SET A, I
-:__ftoa_cont2
 AND A, 0x00FF
 IFE A, 0
 SET PC, __ftoa_done
@@ -156,3 +151,18 @@ SET B, POP
 SET Z, POP
 SET X, POP
 SET PC, POP
+;
+;extern unsigned* getdispcur();
+;
+SET A, [__dispptr]
+SET PC, POP
+;
+;extern unsigned* setdispcur(unsigned*);
+;
+IFG A, 0x817F
+SET A, 0x817F
+IFG 0x8000, A
+SET A, 0x8000
+SET [__dispptr], A
+SET PC, POP
+
