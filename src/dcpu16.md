@@ -39,6 +39,7 @@ static void segment(int);
 static void space(int); 
 static void target(Node);
 static void emithex(short);
+static int addrgop(Node, int);
 static int ncregop(Node, int);
 static int regopu(Node, int);
 static int memop(Node, int);
@@ -191,20 +192,21 @@ acon:   CNSTP1  "%a" 1
 
 saddr:   acon            "%0"
 saddr:   reg             "%0"
-saddr:   ADDRGP1         "%a" 1
+saddr:   ADDRGP1         "%a" addrgop(a, 1)
 caddr:   ADDRFP1         "%a+J" ((a->syms[0]->x.offset)?1:LBURG_MAX)
 caddr:   ADDRFP1         "J"    ((a->syms[0]->x.offset)?LBURG_MAX:1)
 caddr:   ADDRLP1         "#" 1
 
 addr:   ADDI1(reg,acon) "%1+%0"
+addr:   ADDP1(reg,acon) "%1+%0"
 addr:   saddr           "%0"
 addr:   caddr           "%0"
 
 reg:    con     "SET %c, %0\n" 1
 reg:    mem     "SET %c, %0\n" 1
 reg:    saddr   "SET %c, %0\n" 1
-reg:    ADDRFP1 "#\n" 2
 reg:    ADDRLP1 "#\n" 2
+reg:    ADDRGP1 "#\n" 2
 
 mem:    INDIRF1(addr)   "[%0]"
 mem:    INDIRI1(addr)   "[%0]"
@@ -621,13 +623,15 @@ static void clobber(Node p) {
 
 
 static void emit2(Node p) {
+    char* name;
+    char* offset;
     int localoffset;
     int argoffset;
     long intval;
     long double fltval;
     int op = specific(p->op);
     int opsz = opsize(p->op);
-    int i;
+    int i, j;
 
     switch(op) {
         case CNST+F:
@@ -666,6 +670,27 @@ static void emit2(Node p) {
                     print("J");
                 break;
             }
+        case ADDRG+P:
+            debug(fprintf(stderr, "addrg emit2 %s->%s\n", p->syms[0]->x.name, p->syms[RX]->name));
+            assert(p->syms[0]->x.name);
+            name = (char*)malloc(strlen(p->syms[0]->x.name));
+            offset = (char*)malloc(strlen(p->syms[0]->x.name)); 
+            for( i = 0; p->syms[0]->x.name[i]; i++ ) {
+                if ( p->syms[0]->x.name[i] == '+' )
+                    break;
+                name[i] = p->syms[0]->x.name[i];
+            }
+            name[i+1] = 0;
+            assert(p->syms[0]->x.name[i] == '+');
+            i++;
+            for( j = 0; p->syms[0]->x.name[i+j]; j++ ) {
+                offset[j] = p->syms[0]->x.name[i+j];
+            }
+            offset[i+j+1] = 0;
+
+            print("SET %s, %s\nADD %s, %s\n", p->syms[RX]->name, name, p->syms[RX]->name, offset);
+            
+            break;
         case ADDRF+P:
             break;
         case ASGN+B:
@@ -876,7 +901,7 @@ static void defstring(int n, char *str) {
             emithex(v);
         }
     }
-
+    print("\n");
     //print(" ;%s\n", buf);
 }
 
@@ -895,8 +920,15 @@ static void global(Symbol p) {
 
 static void space(int n) {
     int i;
-    for (i = 0; i < n; i++)
-        print("DAT 0\n", n);
+    for (i = 0; i < n; i++) {
+        if ( i == 0 ) {
+            print( "DAT 0" );
+        }
+        else {
+            print( ", 0" );
+        }
+    }
+    print("\n");
 }
 
 static void pushstack(int n, const char* note) {
@@ -913,6 +945,25 @@ static void popstack(int n, const char* note) {
         print("SET POP, POP ;%s\n", note);
     else if (n == 1)
         print("SET POP, SP  ;%s\n", note);
+}
+
+static int addrgop(Node p, int defaultcost) {
+    assert(p);
+    debug(fprintf(stderr, "addgop: %s\n", p->syms[0]->x.name));
+    char* name;
+    int nope = 0;
+    name = p->syms[0]->x.name;
+    while (name) {
+        if ( *name == '+' ) {
+            nope = 1;
+            break;
+        }
+        name++;
+    }
+    
+    if (nope)
+        return LBURG_MAX;
+    return defaultcost;
 }
 
 static int ncregop(Node p, int defaultcost) {

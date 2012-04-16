@@ -22,6 +22,8 @@ IFN [Y], 37 ;%
 SET PC, __printf_putc
 IFE [1+Y], 37 ;%
 SET PC, __printf_putpct
+IFE [1+Y], 99 ;c
+SET PC, __printf_putc2
 IFE [1+Y], 115 ;s
 SET PC, __printf_puts
 IFE [1+Y], 100 ;d
@@ -40,6 +42,14 @@ ADD Y, 1
 IFE [Y], 0
 SET PC, __printf_done
 SET PC, __printf_putc
+:__printf_putc2
+ADD Y, 2
+SET A, [Z]
+BOR A, 0xF000
+ADD Z, 1
+JSR _global_putchar
+ADD X, 1
+SET PC, __printf_loop
 :__printf_puts
 ADD Y, 2
 SET A, [Z]
