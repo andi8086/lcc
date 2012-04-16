@@ -192,19 +192,21 @@ acon:   CNSTP1  "%a" 1
 
 saddr:   acon            "%0"
 saddr:   reg             "%0"
-saddr:   ADDRGP1         "%a" addrgop(a, 1)
 caddr:   ADDRFP1         "%a+J" ((a->syms[0]->x.offset)?1:LBURG_MAX)
 caddr:   ADDRFP1         "J"    ((a->syms[0]->x.offset)?LBURG_MAX:1)
 caddr:   ADDRLP1         "#" 1
+gaddr:   ADDRGP1         "%a" addrgop(a, 1)
 
 addr:   ADDI1(reg,acon) "%1+%0"
 addr:   ADDP1(reg,acon) "%1+%0"
 addr:   saddr           "%0"
 addr:   caddr           "%0"
-
+addr:   gaddr           "%0"
+    
 reg:    con     "SET %c, %0\n" 1
 reg:    mem     "SET %c, %0\n" 1
 reg:    saddr   "SET %c, %0\n" 1
+reg:    gaddr   "SET %c, %0\n" 1
 reg:    ADDRLP1 "#\n" 2
 reg:    ADDRGP1 "#\n" 2
 
@@ -267,6 +269,7 @@ reg:    ADDF1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDI1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDU1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDP1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDP1(bval,gaddr)               "?SET %c, %0\nADD %c, %1\n" addrgop(a->kids[1], 4)
 reg:    ADDF1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
 reg:    ADDI1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
 reg:    ADDU1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
@@ -433,20 +436,20 @@ stmt:   EQF1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 stmt:   EQI1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 stmt:   EQU1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 
-stmt:   GEF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 17
-stmt:   GEI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 17
+stmt:   GEF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 19
+stmt:   GEI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 19
 stmt:   GEU1(bval,bval) "IFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
 
-stmt:   GTF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\n:%a_nn\nIFG %1, %0\nSET PC, %a\n" 15
-stmt:   GTI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\n:%a_nn\nIFG %1, %0\nSET PC, %a\n" 15
+stmt:   GTF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 17
+stmt:   GTI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 17
 stmt:   GTU1(bval,bval) "IFG %0, %1\nSET PC, %a\n" 4
 
-stmt:   LEF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n" 17
-stmt:   LEI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n" 17
+stmt:   LEF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 19
+stmt:   LEI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 19
 stmt:   LEU1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
 
-stmt:   LTF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\n:%a_nn\nIFG %0, %1\nSET PC, %a\n" 15
-stmt:   LTI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\n:%a_nn\nIFG %0, %1\nSET PC, %a\n" 15
+stmt:   LTF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 17
+stmt:   LTI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 17
 stmt:   LTU1(bval,bval) "IFG %1, %0\nSET PC, %a\n" 4
 
 stmt:   NEF1(bval,bval) "IFN %0, %1\nSET PC, %a\n" 4 
@@ -681,14 +684,20 @@ static void emit2(Node p) {
                 name[i] = p->syms[0]->x.name[i];
             }
             name[i+1] = 0;
-            assert(p->syms[0]->x.name[i] == '+');
-            i++;
-            for( j = 0; p->syms[0]->x.name[i+j]; j++ ) {
-                offset[j] = p->syms[0]->x.name[i+j];
-            }
-            offset[i+j+1] = 0;
+            if (p->syms[0]->x.name[i] == '+') {
+                i++;
+                for( j = 0; p->syms[0]->x.name[i+j]; j++ ) {
+                    offset[j] = p->syms[0]->x.name[i+j];
+                }
+                offset[i+j+1] = 0;
 
-            print("SET %s, %s\nADD %s, %s\n", p->syms[RX]->name, name, p->syms[RX]->name, offset);
+                print("SET %s, %s\nADD %s, %s\n", p->syms[RX]->name, name, p->syms[RX]->name, offset);
+            }
+            else {
+                print("SET %s, ", p->syms[RX]->name);
+                emithex(atoi(p->syms[0]->x.name));
+                print("\n");
+            }
             
             break;
         case ADDRF+P:
@@ -949,11 +958,14 @@ static void popstack(int n, const char* note) {
 
 static int addrgop(Node p, int defaultcost) {
     assert(p);
+    if ( !p->syms[0] )
+        return defaultcost;
+
     debug(fprintf(stderr, "addgop: %s\n", p->syms[0]->x.name));
     char* name;
     int nope = 0;
     name = p->syms[0]->x.name;
-    while (name) {
+    while (*name) {
         if ( *name == '+' ) {
             nope = 1;
             break;
