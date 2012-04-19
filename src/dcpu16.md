@@ -192,23 +192,20 @@ acon:   CNSTP1  "%a" 1
 
 saddr:   acon            "%0"
 saddr:   reg             "%0"
+saddr:   ADDRGP1         "%a"
 caddr:   ADDRFP1         "%a+J" ((a->syms[0]->x.offset)?1:LBURG_MAX)
 caddr:   ADDRFP1         "J"    ((a->syms[0]->x.offset)?LBURG_MAX:1)
 caddr:   ADDRLP1         "#" 1
-gaddr:   ADDRGP1         "%a" addrgop(a, 1)
 
 addr:   ADDI1(reg,acon) "%1+%0"
 addr:   ADDP1(reg,acon) "%1+%0"
 addr:   saddr           "%0"
 addr:   caddr           "%0"
-addr:   gaddr           "%0"
     
 reg:    con     "SET %c, %0\n" 1
 reg:    mem     "SET %c, %0\n" 1
 reg:    saddr   "SET %c, %0\n" 1
-reg:    gaddr   "SET %c, %0\n" 1
 reg:    ADDRLP1 "#\n" 2
-reg:    ADDRGP1 "#\n" 2
 
 mem:    INDIRF1(addr)   "[%0]"
 mem:    INDIRI1(addr)   "[%0]"
@@ -269,7 +266,6 @@ reg:    ADDF1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDI1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDU1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
 reg:    ADDP1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDP1(bval,gaddr)               "?SET %c, %0\nADD %c, %1\n" addrgop(a->kids[1], 4)
 reg:    ADDF1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
 reg:    ADDI1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
 reg:    ADDU1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
@@ -277,6 +273,7 @@ reg:    ADDP1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3
 reg:    ADDF1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 reg:    ADDI1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 reg:    ADDU1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
+reg:    ADDP1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 reg:    ADDP1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 stmt:   ASGNF1(addr,ADDF1(bval,bval))   "ADD [%0], %2\n" memop(a, 2) 
 stmt:   ASGNI1(addr,ADDI1(bval,bval))   "ADD [%0], %2\n" memop(a, 2)
@@ -635,6 +632,7 @@ static void emit2(Node p) {
     int op = specific(p->op);
     int opsz = opsize(p->op);
     int i, j;
+    Symbol s;
 
     switch(op) {
         case CNST+F:
@@ -671,32 +669,40 @@ static void emit2(Node p) {
                     print("%d+J", localoffset);
                 else
                     print("J");
-                break;
             }
-        case ADDRG+P:
-            debug(fprintf(stderr, "addrg emit2 %s->%s\n", p->syms[0]->x.name, p->syms[RX]->name));
-            assert(p->syms[0]->x.name);
-            name = (char*)malloc(strlen(p->syms[0]->x.name));
-            offset = (char*)malloc(strlen(p->syms[0]->x.name)); 
-            for( i = 0; p->syms[0]->x.name[i]; i++ ) {
-                if ( p->syms[0]->x.name[i] == '+' )
+            break;
+        case INDIR+P:
+            if (p->kids[0]) {
+                s = p->kids[0]->syms[0];
+            }
+            else {
+                s = p->syms[0];
+            }
+   
+            assert(s->x.name);
+            debug(fprintf(stderr, "addrg emit2 %s->%s\n", s->x.name, p->syms[RX]->name));
+
+            name = (char*)malloc(strlen(s->x.name));
+            offset = (char*)malloc(strlen(s->x.name)); 
+            for( i = 0; s->x.name[i]; i++ ) {
+                if ( s->x.name[i] == '+' )
                     break;
-                name[i] = p->syms[0]->x.name[i];
+                name[i] = s->x.name[i];
             }
             name[i+1] = 0;
-            if (p->syms[0]->x.name[i] == '+') {
+            if (s->x.name[i] == '+') {
                 i++;
-                for( j = 0; p->syms[0]->x.name[i+j]; j++ ) {
-                    offset[j] = p->syms[0]->x.name[i+j];
+                for( j = 0; s->x.name[i+j]; j++ ) {
+                    offset[j] = s->x.name[i+j];
                 }
                 offset[i+j+1] = 0;
 
-                print("SET %s, %s\nADD %s, %s\n", p->syms[RX]->name, name, p->syms[RX]->name, offset);
+                print("SET %s, %s\nADD %s, %s\nSET %s, [%s]\n", p->syms[RX]->name, name, p->syms[RX]->name, offset, p->syms[RX]->name, p->syms[RX]->name);
             }
             else {
-                print("SET %s, ", p->syms[RX]->name);
-                emithex(atoi(p->syms[0]->x.name));
-                print("\n");
+                print("SET %s, [", p->syms[RX]->name);
+                emithex(atoi(s->x.name));
+                print("]\n");
             }
             
             break;
@@ -906,7 +912,7 @@ static void defstring(int n, char *str) {
             emithex(v);
         }
         else {
-            print(", ");
+            print(",");
             emithex(v);
         }
     }
@@ -934,7 +940,7 @@ static void space(int n) {
             print( "DAT 0" );
         }
         else {
-            print( ", 0" );
+            print( ",0" );
         }
     }
     print("\n");
