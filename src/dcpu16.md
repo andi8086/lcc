@@ -262,14 +262,14 @@ stmt:   ASGNI1(addr,NEGI1(bval))    "SET [%0], 0\nSUB [%0], %1\n" memopu(a, 4)
 stmt:   ASGNF1(addr,NEGF1(mem))     "SET I, %1\nSET [%0], 0\nSUB [%0], I\n" 5
 stmt:   ASGNI1(addr,NEGI1(mem))     "SET I, %1\nSET [%0], 0\nSUB [%0], I\n" 5
 
-reg:    ADDF1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDI1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDU1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDP1(bval,cm)                  "?SET %c, %0\nADD %c, %1\n" 3
-reg:    ADDF1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
-reg:    ADDI1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
-reg:    ADDU1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
-reg:    ADDP1(bval,reg)                 "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
+reg:    ADDF1(reg,cm)                   "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDI1(reg,cm)                   "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDU1(reg,cm)                   "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDP1(reg,cm)                   "?SET %c, %0\nADD %c, %1\n" 3
+reg:    ADDF1(reg,reg)                  "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
+reg:    ADDI1(reg,reg)                  "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
+reg:    ADDU1(reg,reg)                  "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
+reg:    ADDP1(reg,reg)                  "?SET %c, %0\nADD %c, %1\n" ncregop(a, 3)
 reg:    ADDF1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 reg:    ADDI1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
 reg:    ADDU1(bval,reg)                 "SET I, %1\nSET %c, %0\nADD %c, I\n" 4
@@ -288,10 +288,10 @@ stmt:   ASGNI1(addr,ADDI1(bval,mem))    "SET I, %2\nSET [%0], %1\nADD [%0], I\n"
 stmt:   ASGNU1(addr,ADDU1(bval,mem))    "SET I, %2\nSET [%0], %1\nADD [%0], I\n" 6
 stmt:   ASGNP1(addr,ADDP1(bval,mem))    "SET I, %2\nSET [%0], %1\nADD [%0], I\n" 6
 
-reg:    BANDI1(bval,cm)                 "?SET %c, %0\nAND %c, %1\n" 2
-reg:    BANDU1(bval,cm)                 "?SET %c, %0\nAND %c, %1\n" 2
-reg:    BANDI1(bval,reg)                "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)
-reg:    BANDU1(bval,reg)                "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)
+reg:    BANDI1(reg,cm)                  "?SET %c, %0\nAND %c, %1\n" 2
+reg:    BANDU1(reg,cm)                  "?SET %c, %0\nAND %c, %1\n" 2
+reg:    BANDI1(reg,reg)                 "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)
+reg:    BANDU1(reg,reg)                 "?SET %c, %0\nAND %c, %1\n" ncregop(a, 2)
 reg:    BANDI1(bval,reg)                "SET I, %1\nSET %c, %0\nAND %c, I\n" 3
 reg:    BANDU1(bval,reg)                "SET I, %1\nSET %c, %0\nAND %c, I\n" 3
 stmt:   ASGNI1(addr,BANDI1(bval,bval))  "AND [%0], %2\n" memop(a, 1)
@@ -327,12 +327,12 @@ stmt:   ASGNU1(addr,BXORU1(bval,bval))  "SET [%0], %1\nXOR [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,BXORI1(bval,mem))   "SET I, %2\nSET [%0], %1\nXOR [%0], I\n" 3
 stmt:   ASGNU1(addr,BXORU1(bval,mem))   "SET I, %2\nSET [%0], %1\nXOR [%0], I\n" 3
 
-reg:    DIVF1(bval,cm)                  "?SET %c, %0\nDIV %c, %1\n" 4
-reg:    DIVI1(bval,cm)                  "?SET %c, %0\nDIV %c, %1\n" 4
-reg:    DIVU1(bval,cm)                  "?SET %c, %0\nDIV %c, %1\n" 4
-reg:    DIVF1(bval,reg)                 "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
-reg:    DIVI1(bval,reg)                 "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
-reg:    DIVU1(bval,reg)                 "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
+reg:    DIVF1(reg,cm)                   "?SET %c, %0\nDIV %c, %1\n" 4
+reg:    DIVI1(reg,cm)                   "?SET %c, %0\nDIV %c, %1\n" 4
+reg:    DIVU1(reg,cm)                   "?SET %c, %0\nDIV %c, %1\n" 4
+reg:    DIVF1(reg,reg)                  "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
+reg:    DIVI1(reg,reg)                  "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
+reg:    DIVU1(reg,reg)                  "?SET %c, %0\nDIV %c, %1\n" ncregop(a, 4)
 reg:    DIVF1(bval,reg)                 "SET I, %1\nSET %c, %0\nDIV %c, I\n" 5
 reg:    DIVI1(bval,reg)                 "SET I, %1\nSET %c, %0\nDIV %c, I\n" 5
 reg:    DIVU1(bval,reg)                 "SET I, %1\nSET %c, %0\nDIV %c, I\n" 5
@@ -346,10 +346,10 @@ stmt:   ASGNF1(addr,DIVF1(bval,mem))    "SET I, %2\nSET [%0], %1\nDIV [%0], I\n"
 stmt:   ASGNI1(addr,DIVI1(bval,mem))    "SET I, %2\nSET [%0], %1\nDIV [%0], I\n" 5
 stmt:   ASGNU1(addr,DIVU1(bval,mem))    "SET I, %2\nSET [%0], %1\nDIV [%0], I\n" 5
 
-reg:    LSHI1(bval,cm)                  "?SET %c, %0\nSHL %c, %1\n" 3
-reg:    LSHU1(bval,cm)                  "?SET %c, %0\nSHL %c, %1\n" 3
-reg:    LSHI1(bval,reg)                 "?SET %c, %0\nSHL %c, %1\n" ncregop(a, 3)
-reg:    LSHU1(bval,reg)                 "?SET %c, %0\nSHL %c, %1\n" ncregop(a, 3)
+reg:    LSHI1(reg,cm)                   "?SET %c, %0\nSHL %c, %1\n" 3
+reg:    LSHU1(reg,cm)                   "?SET %c, %0\nSHL %c, %1\n" 3
+reg:    LSHI1(reg,reg)                  "?SET %c, %0\nSHL %c, %1\n" ncregop(a, 3)
+reg:    LSHU1(reg,reg)                  "?SET %c, %0\nSHL %c, %1\n" ncregop(a, 3)
 reg:    LSHI1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHL %c, I\n" 4
 reg:    LSHU1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHL %c, I\n" 4
 stmt:   ASGNI1(addr,LSHI1(bval,bval))   "SHL [%0], %2\n" memop(a, 2)
@@ -359,10 +359,10 @@ stmt:   ASGNU1(addr,LSHU1(bval,bval))   "SET [%0], %1\nSHL [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,LSHI1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHL [%0], I\n" 4
 stmt:   ASGNU1(addr,LSHU1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHL [%0], I\n" 4
 
-reg:    MODI1(bval,cm)                  "?SET %c, %0\nMOD %c, %1\n" 4
-reg:    MODU1(bval,cm)                  "?SET %c, %0\nMOD %c, %1\n" 4
-reg:    MODI1(bval,reg)                 "?SET %c, %0\nMOD %c, %1\n" ncregop(a, 4)
-reg:    MODU1(bval,reg)                 "?SET %c, %0\nMOD %c, %1\n" ncregop(a, 4)
+reg:    MODI1(reg,cm)                   "?SET %c, %0\nMOD %c, %1\n" 4
+reg:    MODU1(reg,cm)                   "?SET %c, %0\nMOD %c, %1\n" 4
+reg:    MODI1(reg,reg)                  "?SET %c, %0\nMOD %c, %1\n" ncregop(a, 4)
+reg:    MODU1(reg,reg)                  "?SET %c, %0\nMOD %c, %1\n" ncregop(a, 4)
 reg:    MODI1(bval,reg)                 "?SET %c, %0\nSET I, %1\nMOD %c, I\n" 5
 reg:    MODU1(bval,reg)                 "?SET %c, %0\nSET I, %1\nMOD %c, I\n" 5
 stmt:   ASGNI1(addr,MODI1(bval,bval))   "MOD [%0], %2\n" memop(a, 3)
@@ -372,12 +372,12 @@ stmt:   ASGNU1(addr,MODU1(bval,bval))   "SET [%0], %1\nMOD [%0], %2\n" ncmemop(a
 stmt:   ASGNI1(addr,MODI1(bval,mem))    "SET I, %2\nSET [%0], %1\nMOD [%0], I\n" 5
 stmt:   ASGNU1(addr,MODU1(bval,mem))    "SET I, %2\nSET [%0], %1\nMOD [%0], I\n" 5
 
-reg:    MULF1(bval,cm)                  "?SET %c, %0\nMUL %c, %1\nSET I, O\nSHR %c, 8\nSHL I, 8\nADD %c, X\n" 12
-reg:    MULI1(bval,cm)                  "?SET %c, %0\nMUL %c, %1\n" 3
-reg:    MULU1(bval,cm)                  "?SET %c, %0\nMUL %c, %1\n" 3
-reg:    MULF1(bval,reg)                 "?SET %c, %0\nMUL %c, %1\nSET I, O\nSHR %c, 8\nSHL I, 8\nADD %c, X\n" ncregop(a, 12)
-reg:    MULI1(bval,reg)                 "?SET %c, %0\nMUL %c, %1\n" ncregop(a, 3)
-reg:    MULU1(bval,reg)                 "?SET %c, %0\nMUL %c, %1\n" ncregop(a, 3)
+reg:    MULF1(reg,cm)                   "?SET %c, %0\nMUL %c, %1\nSET I, O\nSHR %c, 8\nSHL I, 8\nADD %c, X\n" 12
+reg:    MULI1(reg,cm)                   "?SET %c, %0\nMUL %c, %1\n" 3
+reg:    MULU1(reg,cm)                   "?SET %c, %0\nMUL %c, %1\n" 3
+reg:    MULF1(reg,reg)                  "?SET %c, %0\nMUL %c, %1\nSET I, O\nSHR %c, 8\nSHL I, 8\nADD %c, X\n" ncregop(a, 12)
+reg:    MULI1(reg,reg)                  "?SET %c, %0\nMUL %c, %1\n" ncregop(a, 3)
+reg:    MULU1(reg,reg)                  "?SET %c, %0\nMUL %c, %1\n" ncregop(a, 3)
 reg:    MULF1(bval,reg)                 "SET [_scratch0], %1\nSET %c, %0\nMUL %c, [_scratch0]\nSET I, O\nSHR %c, 8\nSHL I, 8\nADD %c, I\n" 13
 reg:    MULI1(bval,reg)                 "SET I, %1\nSET %c, %0\nMUL %c, I\n" 4
 reg:    MULU1(bval,reg)                 "SET I, %1\nSET %c, %0\nMUL %c, I\n" 4
@@ -391,10 +391,10 @@ stmt:   ASGNF1(addr,MULF1(bval,mem))    "SET [_scratch0], %2\nSET [%0], %1\nMUL 
 stmt:   ASGNI1(addr,MULI1(bval,mem))    "SET I, %2\nSET [%0], %1\nMUL [%0], I\n" 4
 stmt:   ASGNU1(addr,MULU1(bval,mem))    "SET I, %2\nSET [%0], %1\nMUL [%0], I\n" 4
 
-reg:    RSHI1(bval,cm)                  "?SET %c, %0\nSHR %c, %1\n" 3
-reg:    RSHU1(bval,cm)                  "?SET %c, %0\nSHR %c, %1\n" 3
-reg:    RSHI1(bval,reg)                 "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
-reg:    RSHU1(bval,reg)                 "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
+reg:    RSHI1(reg,cm)                   "?SET %c, %0\nSHR %c, %1\n" 3
+reg:    RSHU1(reg,cm)                   "?SET %c, %0\nSHR %c, %1\n" 3
+reg:    RSHI1(reg,reg)                  "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
+reg:    RSHU1(reg,reg)                  "?SET %c, %0\nSHR %c, %1\n" ncregop(a, 3)
 reg:    RSHI1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHR %c, I\n" 4
 reg:    RSHU1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHR %c, I\n" 4
 stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR %0, %2\n" memop(a, 2)
@@ -404,14 +404,14 @@ stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR %0, %2\n" ncmemop(a, 
 stmt:   ASGNI1(addr,RSHI1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHR [%0], I\n" 4
 stmt:   ASGNU1(addr,RSHU1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHR [%0], I\n" 4
 
-reg:    SUBF1(bval,cm)                  "?SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBI1(bval,cm)                  "?SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBU1(bval,cm)                  "?SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBP1(bval,cm)                  "?SET %c, %0\nSUB %c, %1\n" 3
-reg:    SUBF1(bval,reg)                 "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
-reg:    SUBI1(bval,reg)                 "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
-reg:    SUBU1(bval,reg)                 "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
-reg:    SUBP1(bval,reg)                 "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
+reg:    SUBF1(reg,cm)                   "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBI1(reg,cm)                   "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBU1(reg,cm)                   "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBP1(reg,cm)                   "?SET %c, %0\nSUB %c, %1\n" 3
+reg:    SUBF1(reg,reg)                  "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
+reg:    SUBI1(reg,reg)                  "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
+reg:    SUBU1(reg,reg)                  "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
+reg:    SUBP1(reg,reg)                  "?SET %c, %0\nSUB %c, %1\n" ncregop(a, 3)
 reg:    SUBF1(bval,reg)                 "SET I, %1\nSET %c, %0\nSUB %c, I\n" 4
 reg:    SUBI1(bval,reg)                 "SET I, %1\nSET %c, %0\nSUB %c, I\n" 4
 reg:    SUBU1(bval,reg)                 "SET I, %1\nSET %c, %0\nSUB %c, I\n" 4
@@ -990,6 +990,7 @@ static int ncregop(Node p, int defaultcost) {
     assert(p);
     assert(p->kids[0]);
     assert(p->kids[1]);
+    debug(fprintf(stderr, "ncregop %s %s\n", p->syms[RX]->name, p->kids[1]->syms[RX]->name));
 
     if (p->syms[RX] == p->kids[1]->syms[RX])
         return LBURG_MAX;
