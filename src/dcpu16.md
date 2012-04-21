@@ -671,6 +671,7 @@ static void emit2(Node p) {
                     print("J");
             }
             break;
+/*
         case INDIR+P:
             if (p->kids[0]) {
                 s = p->kids[0]->syms[0];
@@ -706,6 +707,7 @@ static void emit2(Node p) {
             }
             
             break;
+*/
         case ADDRF+P:
             break;
         case ASGN+B:
