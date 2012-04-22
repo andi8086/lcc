@@ -980,8 +980,8 @@ static void defstring(int n, char *str) {
             emithex(v);
         }
     }
-    print("\n");
-    //print(" ;%s\n", buf);
+    //print("\n");
+    print(" ;string\n", buf);
 }
 
 static void export(Symbol p) {
