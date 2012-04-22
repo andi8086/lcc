@@ -316,7 +316,7 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			*/
 			if (l->op == ADDRG+P && l->u.sym->generated
 			&& (r->op == CNST+I && (r->u.v.i > 32767 || r->u.v.i < -32768)
-			||  r->op == CNST+U && r->u.v.u > 65536))
+			||  r->op == CNST+U && r->u.v.u > 65536) || IR->byte_width != 8) //ugly hack to work around assemblers with NO offset support
 				break;
 			if (IR->address
 			&&  isaddrop(l->op)
