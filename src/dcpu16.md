@@ -40,13 +40,12 @@ static void space(int);
 static void target(Node);
 static void emithex(short);
 static int addrgop(Node, int);
+static int argop(Node, int);
 static int ncregop(Node, int);
 static int regopu(Node, int);
 static int memop(Node, int);
 static int memopu(Node, int);
 static int ncmemop(Node, int);
-static int argop(Node, int);
-static int callop(Node, int);
 static int sametree(Node, Node);
 
 static void pushstack(int, const char*);
@@ -452,21 +451,21 @@ stmt:   NEF1(bval,bval) "IFN %0, %1\nSET PC, %a\n" 4
 stmt:   NEI1(bval,bval) "IFN %0, %1\nSET PC, %a\n" 4
 stmt:   NEU1(bval,bval) "IFN %0, %1\nSET PC, %a\n" 4
 
-stmt:   ARGF1(bval)                "SET PUSH, %0\n" argop(a, 1)
-stmt:   ARGI1(bval)                "SET PUSH, %0\n" argop(a, 1)
-stmt:   ARGU1(bval)                "SET PUSH, %0\n" argop(a, 1)
-stmt:   ARGP1(bval)                "SET PUSH, %0\n" argop(a, 1)
-stmt:   ARGF1(reg)                 "#\n" 2
-stmt:   ARGI1(reg)                 "#\n" 2
-stmt:   ARGU1(reg)                 "#\n" 2
-stmt:   ARGP1(reg)                 "#\n" 2
+stmt:   ARGF1(reg)                 "#\n" a->x.argno < 3?0:LBURG_MAX
+stmt:   ARGI1(reg)                 "#\n" a->x.argno < 3?0:LBURG_MAX
+stmt:   ARGU1(reg)                 "#\n" a->x.argno < 3?0:LBURG_MAX
+stmt:   ARGP1(reg)                 "#\n" a->x.argno < 3?0:LBURG_MAX
+stmt:   ARGF1(bval)                "#\n" 2
+stmt:   ARGI1(bval)                "#\n" 2
+stmt:   ARGU1(bval)                "#\n" 2
+stmt:   ARGP1(bval)                "#\n" 2
 stmt:   ASGNB(reg,INDIRB(reg))     "# block assign\n" 1
 
-reg:    CALLF1(addr)    "^JSR %0\n" callop(a, 2)
-reg:    CALLI1(addr)    "^JSR %0\n" callop(a, 2)
-reg:    CALLU1(addr)    "^JSR %0\n" callop(a, 2)
-reg:    CALLP1(addr)    "^JSR %0\n" callop(a, 2)
-stmt:   CALLV(addr)     "^JSR %0\n" callop(a, 2)
+reg:    CALLF1(addr)    "#\n" 2
+reg:    CALLI1(addr)    "#\n" 2
+reg:    CALLU1(addr)    "#\n" 2
+reg:    CALLP1(addr)    "#\n" 2
+stmt:   CALLV(addr)     "#\n" 2
 
 stmt:   RETF1(reg) "# return float\n" 2
 stmt:   RETI1(reg) "# return int\n" 2
@@ -648,9 +647,24 @@ static void emit2(Node p) {
                 print("%d", intval);
             break;
         case ARG+F: case ARG+I: case ARG+U: case ARG+P:
+            if (p->x.argno > 2) {
+                assert(maxargoffset);
+                if (p->x.argno == 3)
+                    print("SET PEEK, ");
+                else
+                    print("SET I, SP\nSET [%d+I], ", p->x.argno - 3);
+                emitasm(p->kids[0], _bval_NT);
+                print("\n");
+            }
             break;
         case CALL+F: case CALL+I: case CALL+U: case CALL+P: case CALL+V:
+            assert(p->kids[0]);
             argoffset = p->syms[0]->u.c.v.i;
+            
+            print("JSR ");
+            emitasm(p->kids[0], _addr_NT);
+            print("\n");
+
             if (argoffset > 3)
                 popstack(argoffset - 3, "popping arguments from stack");
             break;
@@ -735,17 +749,13 @@ static void emithex(short i) {
 }
 
 static void doarg(Node p) {
+    static int argno;
     assert(p && p->syms[0]);
-    Node q = p;
-    int argsleft = 0;
-    while ( generic(q->link->op) == ARG ) {
-        q = q->link;
-        argsleft++;
-    }
+    if (argoffset == 0)
+        argno = 0;
 
-    debug(fprintf(stderr, "doarg called %ld %d\n", p->syms[0]->u.c.v.i, argsleft));
-    mkactual(1, p->syms[0]->u.c.v.i);
-    p->x.argno = argsleft;
+    p->x.argno = argno++;
+    p->syms[2] = intconst(mkactual(1, p->syms[0]->u.c.v.i));
     debug(fprintf(stderr, "doarg done with argoffset=%d\n", argoffset));
 }
 
@@ -845,6 +855,9 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int ncalls) {
 
     gencode(caller, callee);
 
+    maxargoffset = maxargoffset > 2?maxargoffset - 3:0;
+    debug(fprintf(stderr, "function: gencode done.  maxargoffset = %d\n", maxargoffset));
+    
     offset = maxoffset;
     for (i=0; callee[i]; i++) {
         Symbol p = callee[i];
@@ -872,19 +885,17 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int ncalls) {
     if (pushregargs[0])
         print("SET PUSH, A\n");
 
-    //push locals
     pushstack(maxoffset, "making room on stack for locals");
     print("SET I, J\n");
     print("SET J, SP    ;set new frame pointer\n");
     print("SET PUSH, I  ;save previous frame pointer\n");
+    pushstack(maxargoffset, "making room on stack for outgoing arguments");
 
     emitcode();
 
     //epilogue
-
-    //pop locals
-    popstack(maxoffset + pushregargs[0] + pushregargs[1] + pushregargs[2], "popping locals and register arguments from stack");
     print("SET J, POP   ;restore previous frame pointer\n");
+    popstack(maxoffset + pushregargs[0] + pushregargs[1] + pushregargs[2], "popping locals and register arguments from stack");
     print("SET PC, POP\n");
 }
 
@@ -1095,18 +1106,6 @@ static int ncmemop(Node p, int defaultcost) {
         return defaultcost;
 }
 
-static int callop(Node p, int defaultcost) {
-    debug(fprintf(stderr, "callop called\n"));
-    return defaultcost;
-}
-
-static int argop(Node p, int defaultcost) {
-    debug(fprintf(stderr, "argop called with argno=%d\n", p->x.argno));
-    if ( p->x.argno < 3 )
-        return LBURG_MAX;
-    return defaultcost;
-}
-
 static int sametree(Node p, Node q) {
     return p == NULL && q == NULL
         || p && q && p->op == q->op && p->syms[0] == q->syms[0]
@@ -1129,7 +1128,7 @@ Interface dcpu16IR = {
         1,        /* mulops_calls */
         0,        /* wants_callb */
         0,        /* wants_argb */
-        0,        /* left_to_right */
+        1,        /* left_to_right */
         0,        /* wants_dag */
         1,        /* unsigned_char */
         16,       /* width */
