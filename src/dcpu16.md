@@ -193,8 +193,7 @@ acon:   CNSTP1  "%a" 1
 saddr:   acon            "%0"
 saddr:   reg             "%0"
 saddr:   ADDRGP1         "%a"
-caddr:   ADDRFP1         "%a+J" ((a->syms[0]->x.offset)?1:LBURG_MAX)
-caddr:   ADDRFP1         "J"    ((a->syms[0]->x.offset)?LBURG_MAX:1)
+caddr:   ADDRFP1         "#" 1
 caddr:   ADDRLP1         "#" 1
 
 addr:   ADDI1(reg,acon) "%1+%0"
@@ -573,14 +572,17 @@ static void target(Node p) {
             switch (p->x.argno) {
                 case 0:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting A\n", p->x.argno));
+                    spill(1 << RGA, IREG, p);
                     rtarget(p, 0, reg[RGA]);
                     break;
                 case 1:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting B\n", p->x.argno));
+                    spill(1 << RGB, IREG, p);
                     rtarget(p, 0, reg[RGB]);
                     break;
                 case 2:
                     debug(fprintf(stderr, "target called on ARG with argno = %d, targetting C\n", p->x.argno));
+                    spill(1 << RGC, IREG, p);
                     rtarget(p, 0, reg[RGC]);
                     break;
                 default:
@@ -609,14 +611,10 @@ static void target(Node p) {
 }
 
 static void clobber(Node p) {
-    int opsz;
     assert(p);
-        
-    opsz = opsize(p->op);
-    switch (specific(p->op)) {
-        case MUL+F:
-            if (opsz == 1)
-                spill(1<<RGX, IREG, p);
+    switch (generic(p->op)) {
+        case CALL:
+            spill(TMP_REG, IREG, p);
             break;
     }
 }
@@ -709,6 +707,10 @@ static void emit2(Node p) {
             break;
 */
         case ADDRF+P:
+            if (p->syms[0]->x.offset)
+                print("%d+J", p->syms[0]->x.offset);
+            else
+                print("J");
             break;
         case ASGN+B:
             assert(p->kids[0]);
@@ -758,8 +760,32 @@ static void local(Symbol p) {
     }
 }
 
-static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
-    int i,nreg,nfreg,nargs;
+static void function(Symbol f, Symbol caller[], Symbol callee[], int ncalls) {
+
+/* Call stack layout:
++---------------------------
+|
+| Incoming Arguments
+|
++--------------------------- <-- Frame Begin
+| Return Address
++---------------------------
+|
+| Pushed Register Arguments
+|
++---------------------------
+|                           
+| Locals
+|                           <-- Frame Pointer (J)
++---------------------------
+| Previous Frame Pointer    
++---------------------------
+|
+| Outgoing Arguments
+|                           <-- SP
++--------------------------- <-- Frame End
+*/
+    int i,nreg,nfreg,nargs,pushregargs[3];
     long fused;
     Symbol fs;
     Symbol r;
@@ -773,6 +799,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
     
     maxargoffset = 0;
     offset = maxoffset = 0;
+    pushregargs[0] = pushregargs[1] = pushregargs[2] = 0;
 
     for (i=0; callee[i]; i++) {
         Symbol p = callee[i];
@@ -780,38 +807,57 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
         assert(q);
         
-        if ( i < 3 ) {
-            debug(fprintf(stderr, "in register args %s %d\n", q->name, q->generated));
-            r = reg[i];
-            p->x.offset = q->x.offset = 0;
-            p->x.name = q->x.name = r->x.name;
-            p->sclass = q->sclass = REGISTER;
-            int n = r->x.regnode->set;
-            //freemask[n] &= ~r->x.regnode->mask;
-            //usedmask[n] |= r->x.regnode->mask;
-            p->x.regnode = r->x.regnode;
-            p->x.regnode->vbl = p;
-        }
-        else {
-            p->x.offset = q->x.offset = offset;
-            p->x.name = q->x.name = stringf("%d",p->x.offset);
-            p->sclass = q->sclass = AUTO;
-            offset += roundup(q->type->size,q->type->align);
+        switch(i) {
+            case 0:
+                if (ncalls || f->type->type->op != VOID) {
+                    p->x.offset = q->x.offset = 1;
+                    p->sclass = q->sclass = AUTO;
+                    pushregargs[0] = 1;
+                    break;
+                }
+            case 1:
+            case 2:
+                if (ncalls) {
+                    p->x.offset = q->x.offset = 1;
+                    p->sclass = q->sclass = AUTO;
+                    pushregargs[i] = 1;
+                    break;
+                }
+                r = reg[i];
+                p->sclass = q->sclass = REGISTER;
+                p->x.offset = q->x.offset = 0;
+                p->x.name = q->x.name = r->x.name;
+                p->x.regnode = r->x.regnode;
+                p->x.regnode->vbl = p;            
+                q->x = p->x;
+                q->type = p->type;
+                break;
+            default:
+                p->x.offset = q->x.offset = 1;
+                p->sclass = q->sclass = AUTO;
+                break;
         }
     }
+    nargs = i;
+    offset = maxoffset = 0;
 
     debug(fprintf(stderr, "function: calling gencode\n"));
 
     gencode(caller, callee);
 
-    offset = maxoffset + 2;
+    offset = maxoffset;
     for (i=0; callee[i]; i++) {
         Symbol p = callee[i];
         Symbol q = caller[i];
         assert(q);
 
-        if ( i > 2 ) {
+        if (i < 3 && pushregargs[i]) {
             p->x.offset = q->x.offset = offset;
+            p->x.name = q->x.name = stringf("%d",p->x.offset);
+            offset += roundup(q->type->size,q->type->align);
+        }
+        else if (i >= 3) {
+            p->x.offset = q->x.offset = offset + 1;
             p->x.name = q->x.name = stringf("%d",p->x.offset);
             offset += roundup(q->type->size,q->type->align);
         }
@@ -819,20 +865,25 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
     // prologue
     print(":%s\n", f->x.name);
-    print("SET PUSH, J  ;save previous frame pointer\n");
+    if (pushregargs[2])
+        print("SET PUSH, C\n");
+    if (pushregargs[1])
+        print("SET PUSH, B\n");
+    if (pushregargs[0])
+        print("SET PUSH, A\n");
 
     //push locals
     pushstack(maxoffset, "making room on stack for locals");
-
+    print("SET I, J\n");
     print("SET J, SP    ;set new frame pointer\n");
+    print("SET PUSH, I  ;save previous frame pointer\n");
 
     emitcode();
 
     //epilogue
 
     //pop locals
-    popstack(maxoffset, "popping locals from stack");
-
+    popstack(maxoffset + pushregargs[0] + pushregargs[1] + pushregargs[2], "popping locals and register arguments from stack");
     print("SET J, POP   ;restore previous frame pointer\n");
     print("SET PC, POP\n");
 }
@@ -923,11 +974,11 @@ static void defstring(int n, char *str) {
 }
 
 static void export(Symbol p) {
-    debug(fprintf(stderr, "export called\n"));
+    debug(fprintf(stderr, "export called %s\n", p->name));
 }
 
 static void import(Symbol p) {
-    debug(fprintf(stderr, "import called\n"));
+    debug(fprintf(stderr, "import called %s\n", p->name));
 }
 
 static void global(Symbol p) {
