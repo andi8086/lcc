@@ -1,18 +1,21 @@
 #include <dcpulib.h>
 
 int in[] = {10, 32, -1, 567, 3, 18, 1, -51, 789, 0};
-
+int insz = (sizeof in)/(sizeof in[0]);
 main() {
-    unsigned i;
-    unsigned j = (sizeof in)/(sizeof in[0]);
-    sort(in, j);
-    for (i = 0; i < j; i++) {
-        printf("%d\n", in[i]);
-    }
+    sort(in, insz);
     return 0;
 }
 
 int *xx;
+
+print() {
+    unsigned i;
+    for (i = 0; i < insz; i++) {
+        printf("%d ", in[i]);
+    }
+    printf("\n");
+}
 
 /* sort - sort a[0..n-1] into increasing order */
 sort(a, n) int a[]; {
@@ -52,4 +55,5 @@ exchange(x, y) int *x, *y; {
 
     printf("exchange(%d,%d)\n", x - (unsigned)xx, y - (unsigned)xx);
     t = *x; *x = *y; *y = t;
+    print();
 }
