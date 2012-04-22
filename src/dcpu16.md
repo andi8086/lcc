@@ -431,20 +431,20 @@ stmt:   EQF1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 stmt:   EQI1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 stmt:   EQU1(bval,bval) "IFE %0, %1\nSET PC, %a\n" 4
 
-stmt:   GEF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 19
-stmt:   GEI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 19
+stmt:   GEF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 15
+stmt:   GEI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a\nIFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE \nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n:%a_done\n" 15
 stmt:   GEU1(bval,bval) "IFG %0, %1\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
 
-stmt:   GTF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 17
-stmt:   GTI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a_pn\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %1\nIFG %0, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET I, 0\nSUB I, %0\nIFG I, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 17
+stmt:   GTF1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 14
+stmt:   GTI1(bval,bval) "IFG %0, 0x7FFE\nSET PC, %a_nu\nIFG %1, 0x7FFE\nSET PC, %a\nIFG %0, %1\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %1, 0x7FFE\nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %1, %0\nSET PC, %a\n:%a_done\n" 14
 stmt:   GTU1(bval,bval) "IFG %0, %1\nSET PC, %a\n" 4
 
-stmt:   LEF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 19
-stmt:   LEI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 19
+stmt:   LEF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 15
+stmt:   LEI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a\nIFG %1, %0\nSET PC, %a\nIFE %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\nIFE %1, %0\nSET PC, %a\n:%a_done\n" 15
 stmt:   LEU1(bval,bval) "IFG %1, %0\nSET PC, %a\nIFE %0, %1\nSET PC, %a\n" 6
 
-stmt:   LTF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 17
-stmt:   LTI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a_pn\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_pn\nSET I, 0\nSUB I, %0\nIFG %1, I\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE \nSET PC, %a_nn\nSET I, 0\nSUB I, %1\nIFG I, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 17
+stmt:   LTF1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE\nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 14
+stmt:   LTI1(bval,bval) "IFG %1, 0x7FFE\nSET PC, %a_nu\nIFG %0, 0x7FFE\nSET PC, %a\nIFG %1, %0\nSET PC, %a\nSET PC, %a_done\n:%a_nu\nIFG %0, 0x7FFE\nSET PC, %a_nn\nSET PC, %a_done\n:%a_nn\nIFG %0, %1\nSET PC, %a\n:%a_done\n" 14
 stmt:   LTU1(bval,bval) "IFG %1, %0\nSET PC, %a\n" 4
 
 stmt:   NEF1(bval,bval) "IFN %0, %1\nSET PC, %a\n" 4 
