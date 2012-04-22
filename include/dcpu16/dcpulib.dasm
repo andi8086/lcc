@@ -133,7 +133,10 @@ SET [__dispptr], B
 SET PC, POP
 :__putchar_cont
 SET [B], A
-ADD [__dispptr], 1
+ADD B, 1
+IFG B, 0x817F
+SET B, 0x8000
+SET [__dispptr], B
 SET PC, POP
 ;
 ;extern int puts( const char* );
@@ -153,7 +156,7 @@ BOR [B], 0xF000
 ADD B, 1
 :__puts_cont
 IFG B, 0x817F
-SUB B, 0x0180
+SET B, 0x8000
 ADD A, 1
 ADD C, 1
 IFN [A], 0
@@ -178,7 +181,7 @@ ADD B, 1
 SET PC, __newline
 :__newline_done
 IFG B, 0x817F
-SUB B, 0x0180
+SET B, 0x8000
 SET PC, POP
 ;
 ;extern char* itoa( int, char*, int );
