@@ -171,8 +171,12 @@ SET PC, POP
 :__newline
 SET I, B
 MOD I, 0x0020
-ADD B, 0x0020
-SUB B, I
+IFE I, 0
+SET PC, __newline_done
+SET [B], 0
+ADD B, 1
+SET PC, __newline
+:__newline_done
 IFG B, 0x817F
 SUB B, 0x0180
 SET PC, POP
