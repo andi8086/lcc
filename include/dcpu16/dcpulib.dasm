@@ -305,6 +305,8 @@ SET A, [B]          ;A = pointer to current block
 :__malloc_loop
 IFG [1+A], I
 SET PC, __malloc_doit
+IFE [1+A], I
+SET PC, __malloc_doit
 SET B, A            ;B = pointer to previous block (or head)
 SET A, [A]
 IFE A, 0
@@ -371,11 +373,12 @@ SET I, [__heaphead]
 SET [2+A], I            ;current->next = *head
 SET [1+C], __heaphead   ;current->prev = head
 IFE I, 0
-SET PC, __free_mergeright
+SET PC, __free_cont
 ADD I, [1+I]
 ADD I, 3
 SET [I], A
 ADD [I], 2              ;current->next->prev = current
+:__free_cont
 SET [__heaphead], A
 ADD [__heaphead], 2
 :__free_mergeright
@@ -455,4 +458,7 @@ ADD I, 4
 SET PC, __heapinit2
 :__heaphead
 DAT 0                                                                                                                         
-                                                                                                                              
+:__heap1stblk
+DAT 0
+:__heap1stsize
+DAT 0                                                                                                                 
