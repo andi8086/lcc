@@ -397,8 +397,8 @@ reg:    RSHI1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHR %c, I\n" 4
 reg:    RSHU1(bval,reg)                 "SET I, %1\nSET %c, %0\nSHR %c, I\n" 4
 stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SHR [%0], %2\n" memop(a, 2)
 stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SHR [%0], %2\n" memop(a, 2)
-stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR %0, %2\n" ncmemop(a, 3)
-stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR %0, %2\n" ncmemop(a, 3)
+stmt:   ASGNI1(addr,RSHI1(bval,bval))   "SET [%0], %1\nSHR [%0], %2\n" ncmemop(a, 3)
+stmt:   ASGNU1(addr,RSHU1(bval,bval))   "SET [%0], %1\nSHR [%0], %2\n" ncmemop(a, 3)
 stmt:   ASGNI1(addr,RSHI1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHR [%0], I\n" 4
 stmt:   ASGNU1(addr,RSHU1(bval,mem))    "SET I, %2\nSET [%0], %1\nSHR [%0], I\n" 4
 
