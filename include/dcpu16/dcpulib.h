@@ -11,4 +11,7 @@ extern int puts( const char* );
 extern unsigned* getdispcur();          //Get display cursor - returns a pointer between 0x8000 and 0x817f
 extern unsigned* setdispcur(unsigned*); //Set display cursor
 
+extern void* malloc(unsigned);          //returns NULL if no free block can be found.
+extern void free(void*);
+
 #endif
